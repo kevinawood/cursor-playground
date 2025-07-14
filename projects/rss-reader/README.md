@@ -62,4 +62,7 @@ rss-reader/
 - [ ] Export/import feeds
 - [ ] Mobile app
 - [ ] Article bookmarks
-- [ ] Reading time estimates 
+- [ ] Reading time estimates
+- [ ] Dark mode theme
+- [ ] Side panel with subscribed feeds for article filtering
+- [ ] Enhanced feed search with query parameters (search by domain, keywords, etc.) 
