@@ -192,6 +192,7 @@ def get_articles():
     per_page = request.args.get('per_page', 20, type=int)
     category = request.args.get('category')
     unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+    feed_id = request.args.get('feed_id', type=int)
     
     query = Article.query.join(Feed).filter(Feed.is_active == True)
     
@@ -200,6 +201,9 @@ def get_articles():
     
     if unread_only:
         query = query.filter(Article.is_read == False)
+    
+    if feed_id:
+        query = query.filter(Article.feed_id == feed_id)
     
     articles = query.order_by(Article.published_date.desc()).paginate(
         page=page, per_page=per_page, error_out=False
