@@ -6,9 +6,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
+    "test": "vitest --config vitest.config.cjs",
+    "test:ui": "vitest --ui --config vitest.config.cjs",
+    "test:coverage": "vitest --coverage --config vitest.config.cjs",
     "test:e2e": "cypress run",
     "test:e2e:open": "cypress open"
   },

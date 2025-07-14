@@ -9,12 +9,15 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy application code
-COPY . .
-
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
+
+# Copy application code
+COPY . .
+
+# Change ownership of the app directory
+RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 # Expose port
