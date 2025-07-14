@@ -118,9 +118,14 @@ def fetch_feed_articles(feed_id):
 
 def refresh_all_feeds():
     """Refresh all active feeds"""
-    feeds = Feed.query.filter_by(is_active=True).all()
-    for feed in feeds:
-        fetch_feed_articles(feed.id)
+    with app.app_context():
+        print(f"🔄 Starting scheduled feed refresh at {datetime.utcnow()}")
+        feeds = Feed.query.filter_by(is_active=True).all()
+        print(f"📰 Found {len(feeds)} active feeds to refresh")
+        for feed in feeds:
+            print(f"🔄 Refreshing feed: {feed.name}")
+            fetch_feed_articles(feed.id)
+        print(f"✅ Feed refresh completed at {datetime.utcnow()}")
 
 # Routes
 @app.route('/api/feeds', methods=['GET'])
