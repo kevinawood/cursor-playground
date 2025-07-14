@@ -64,10 +64,38 @@ rss-reader/
 - `GET /api/categories` - List all categories
 - `GET /api/stats` - Get statistics
 
+## Testing
+
+The project includes comprehensive testing across all layers:
+
+### Quick Test Commands
+```bash
+# Run all tests
+./scripts/test.sh
+
+# Backend tests only
+cd backend && pytest tests/ -v
+
+# Frontend tests only
+cd frontend && npm run test
+
+# E2E tests
+cd frontend && npm run test:e2e
+```
+
+### Test Coverage
+- **Backend**: Unit tests for API endpoints, database models, and business logic
+- **Frontend**: Component tests with Vitest and Vue Test Utils
+- **E2E**: Full application testing with Cypress
+- **CI/CD**: Automated testing on GitHub Actions
+
+See [TESTING.md](./TESTING.md) for detailed testing documentation.
+
 ## Roadmap
 
 - [x] Docker containerization for consistent deployment
 - [x] Side panel with subscribed feeds for article filtering
+- [x] Comprehensive testing suite
 - [ ] Reddit timeline integration
 - [ ] Spotify new releases
 - [ ] Rotten Tomatoes movie/show tracking
