@@ -253,6 +253,36 @@ def get_stats():
         'read_articles': total_articles - unread_articles
     })
 
+@app.route('/api/feed-search')
+def feed_search():
+    query = request.args.get('q')
+    if not query:
+        return jsonify({'error': 'Missing query'}), 400
+
+    # Use feedsearch.dev public API (no API key required for basic usage)
+    try:
+        resp = requests.get(f'https://feedsearch.dev/api/v1/search?query={query}', timeout=10)
+        if resp.status_code != 200:
+            return jsonify({'error': 'Feed search service unavailable'}), 502
+        data = resp.json()
+        # Deduplicate by feed URL
+        seen = set()
+        feeds = []
+        for feed in data.get('results', []):
+            url = feed.get('url')
+            if url and url not in seen:
+                seen.add(url)
+                feeds.append({
+                    'title': feed.get('title') or feed.get('site_title') or url,
+                    'url': url,
+                    'website': feed.get('site_url'),
+                    'description': feed.get('description'),
+                    'favicon': feed.get('favicon')
+                })
+        return jsonify({'feeds': feeds})
+    except Exception as e:
+        return jsonify({'error': f'Feed search failed: {str(e)}'}), 500
+
 # Schedule feed refresh every 5 minutes
 scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=5)
 

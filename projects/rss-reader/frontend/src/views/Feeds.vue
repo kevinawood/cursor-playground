@@ -18,6 +18,70 @@
       </div>
     </div>
 
+    <!-- Feed Search Section -->
+    <div class="mt-8 bg-white shadow sm:rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Search for RSS Feeds</h3>
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <input
+              v-model="searchQuery"
+              @keyup.enter="searchFeeds"
+              type="text"
+              placeholder="Search for a website, magazine, or RSS feed..."
+              class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <button
+            @click="searchFeeds"
+            :disabled="searching"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            {{ searching ? 'Searching...' : 'Search' }}
+          </button>
+        </div>
+
+        <!-- Search Results -->
+        <div v-if="searchResults.length > 0" class="mt-6">
+          <h4 class="text-sm font-medium text-gray-900 mb-3">Search Results</h4>
+          <div class="space-y-3">
+            <div
+              v-for="feed in searchResults"
+              :key="feed.url"
+              class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              <div class="flex items-center space-x-3">
+                <img
+                  v-if="feed.favicon"
+                  :src="feed.favicon"
+                  :alt="feed.title"
+                  class="w-6 h-6 rounded"
+                  @error="$event.target.style.display='none'"
+                />
+                <div>
+                  <h5 class="text-sm font-medium text-gray-900">{{ feed.title }}</h5>
+                  <p v-if="feed.website" class="text-xs text-gray-500">{{ feed.website }}</p>
+                  <p v-if="feed.description" class="text-xs text-gray-600 mt-1">{{ feed.description }}</p>
+                </div>
+              </div>
+              <button
+                @click="addFeedFromSearch(feed)"
+                :disabled="addingFeed === feed.url"
+                class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {{ addingFeed === feed.url ? 'Adding...' : 'Add' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Results -->
+        <div v-else-if="searched && searchResults.length === 0" class="mt-6 text-center py-4">
+          <p class="text-sm text-gray-500">No RSS feeds found for "{{ searchQuery }}"</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Feeds list -->
     <div class="mt-8">
       <div v-if="loading" class="text-center py-12">
@@ -181,7 +245,13 @@ export default {
         name: '',
         url: '',
         category: 'General'
-      }
+      },
+      // Search functionality
+      searchQuery: '',
+      searchResults: [],
+      searching: false,
+      searched: false,
+      addingFeed: null
     }
   },
   async mounted() {
@@ -199,38 +269,115 @@ export default {
         this.loading = false
       }
     },
-    
+
+    async searchFeeds() {
+      if (!this.searchQuery.trim()) return
+      
+      this.searching = true
+      this.searched = true
+      try {
+        const response = await axios.get(`/api/feed-search?q=${encodeURIComponent(this.searchQuery)}`)
+        this.searchResults = response.data.feeds || []
+      } catch (error) {
+        console.error('Error searching feeds:', error)
+        this.searchResults = []
+      } finally {
+        this.searching = false
+      }
+    },
+
+    async addFeedFromSearch(feed) {
+      this.addingFeed = feed.url
+      try {
+        // Determine category based on feed title/description
+        let category = 'General'
+        const title = feed.title.toLowerCase()
+        const description = (feed.description || '').toLowerCase()
+        
+        if (title.includes('tech') || description.includes('tech')) category = 'Technology'
+        else if (title.includes('news') || description.includes('news')) category = 'News'
+        else if (title.includes('sport') || description.includes('sport')) category = 'Sports'
+        else if (title.includes('entertainment') || description.includes('entertainment')) category = 'Entertainment'
+        else if (title.includes('science') || description.includes('science')) category = 'Science'
+        else if (title.includes('business') || description.includes('business')) category = 'Business'
+        else if (title.includes('politic') || description.includes('politic')) category = 'Politics'
+
+        const response = await axios.post('/api/feeds', {
+          name: feed.title,
+          url: feed.url,
+          category: category
+        })
+        
+        // Add to feeds list
+        this.feeds.push({
+          id: response.data.id,
+          name: response.data.name,
+          url: response.data.url,
+          category: response.data.category,
+          last_fetched: response.data.last_fetched,
+          article_count: 0,
+          logo_url: feed.favicon
+        })
+        
+        // Remove from search results
+        this.searchResults = this.searchResults.filter(f => f.url !== feed.url)
+        
+        // Clear search if no more results
+        if (this.searchResults.length === 0) {
+          this.searchQuery = ''
+          this.searched = false
+        }
+      } catch (error) {
+        console.error('Error adding feed:', error)
+        alert('Failed to add feed. It might already exist or be invalid.')
+      } finally {
+        this.addingFeed = null
+      }
+    },
+
     async addFeed() {
       this.adding = true
       try {
-        await axios.post('/api/feeds', this.newFeed)
+        const response = await axios.post('/api/feeds', this.newFeed)
+        this.feeds.push({
+          id: response.data.id,
+          name: response.data.name,
+          url: response.data.url,
+          category: response.data.category,
+          last_fetched: response.data.last_fetched,
+          article_count: 0
+        })
         this.showAddModal = false
         this.newFeed = { name: '', url: '', category: 'General' }
-        await this.loadFeeds()
       } catch (error) {
         console.error('Error adding feed:', error)
-        alert(error.response?.data?.error || 'Error adding feed')
+        alert('Failed to add feed. It might already exist or be invalid.')
       } finally {
         this.adding = false
       }
     },
-    
+
     async deleteFeed(feed) {
-      if (confirm(`Are you sure you want to delete "${feed.name}"?`)) {
-        try {
-          await axios.delete(`/api/feeds/${feed.id}`)
-          await this.loadFeeds()
-        } catch (error) {
-          console.error('Error deleting feed:', error)
-          alert('Error deleting feed')
-        }
+      if (!confirm(`Are you sure you want to delete "${feed.name}"?`)) return
+      
+      try {
+        await axios.delete(`/api/feeds/${feed.id}`)
+        this.feeds = this.feeds.filter(f => f.id !== feed.id)
+      } catch (error) {
+        console.error('Error deleting feed:', error)
+        alert('Failed to delete feed.')
       }
     },
-    
+
     formatDate(dateString) {
-      if (!dateString) return 'Never'
+      if (!dateString) return ''
       const date = new Date(dateString)
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+      const now = new Date()
+      const diffInMinutes = Math.floor((now - date) / (1000 * 60))
+      
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
+      return `${Math.floor(diffInMinutes / 1440)}d ago`
     }
   }
 }
