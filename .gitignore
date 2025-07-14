@@ -1,0 +1,4 @@
+# RSS Reader ignores
+projects/rss-reader/backend/.env
+projects/rss-reader/frontend/node_modules/
+projects/rss-reader/venv/ 
