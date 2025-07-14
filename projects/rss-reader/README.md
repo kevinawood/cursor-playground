@@ -67,6 +67,7 @@ rss-reader/
 ## Roadmap
 
 - [x] Docker containerization for consistent deployment
+- [x] Side panel with subscribed feeds for article filtering
 - [ ] Reddit timeline integration
 - [ ] Spotify new releases
 - [ ] Rotten Tomatoes movie/show tracking
@@ -76,5 +77,4 @@ rss-reader/
 - [ ] Article bookmarks
 - [ ] Reading time estimates
 - [ ] Dark mode theme
-- [ ] Side panel with subscribed feeds for article filtering
 - [ ] Enhanced feed search with query parameters (search by domain, keywords, etc.) 

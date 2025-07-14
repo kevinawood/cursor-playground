@@ -93,10 +93,15 @@ def fetch_feed_articles(feed_id):
                 elif 'updated_parsed' in entry:
                     published_date = datetime(*entry.updated_parsed[:6])
                 
+                # Truncate article title if it's too long (database limit is 500 characters)
+                title = entry.get('title', 'No Title')
+                if len(title) > 500:
+                    title = title[:497] + "..."
+                
                 # Create new article
                 article = Article(
                     feed_id=feed.id,
-                    title=entry.get('title', 'No Title'),
+                    title=title,
                     link=entry.get('link', ''),
                     description=entry.get('summary', ''),
                     published_date=published_date,
@@ -150,6 +155,11 @@ def add_feed():
     
     if not name or not url:
         return jsonify({'error': 'Name and URL are required'}), 400
+    
+    # Truncate feed name if it's too long (database limit is 100 characters)
+    if len(name) > 100:
+        name = name[:97] + "..."
+        print(f"📝 Truncated feed name to: {name}")
     
     # Check if feed already exists
     existing = Feed.query.filter_by(url=url).first()
