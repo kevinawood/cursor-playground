@@ -259,29 +259,54 @@ def feed_search():
     if not query:
         return jsonify({'error': 'Missing query'}), 400
 
-    # Use feedsearch.dev public API (no API key required for basic usage)
+    feeds = []
+    
+    # Use feedsearch.dev API - the most reliable RSS discovery service
     try:
-        resp = requests.get(f'https://feedsearch.dev/api/v1/search?query={query}', timeout=10)
-        if resp.status_code != 200:
-            return jsonify({'error': 'Feed search service unavailable'}), 502
-        data = resp.json()
-        # Deduplicate by feed URL
-        seen = set()
-        feeds = []
-        for feed in data.get('results', []):
-            url = feed.get('url')
-            if url and url not in seen:
-                seen.add(url)
-                feeds.append({
-                    'title': feed.get('title') or feed.get('site_title') or url,
-                    'url': url,
-                    'website': feed.get('site_url'),
-                    'description': feed.get('description'),
-                    'favicon': feed.get('favicon')
-                })
-        return jsonify({'feeds': feeds})
+        # Prepare the URL for feedsearch.dev
+        # If query doesn't have http, assume it's a domain
+        if not query.startswith('http'):
+            search_url = f"https://feedsearch.dev/api/v1/search?url={query}"
+        else:
+            search_url = f"https://feedsearch.dev/api/v1/search?url={query}"
+        
+        resp = requests.get(search_url, timeout=15)
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            
+            # Process feedsearch.dev results
+            for feed in data:
+                if feed.get('url'):  # Only include feeds with valid URLs
+                    feeds.append({
+                        'title': feed.get('title', 'Unknown Feed'),
+                        'url': feed['url'],
+                        'website': feed.get('site_url', ''),
+                        'description': feed.get('description', ''),
+                        'favicon': feed.get('favicon', '')
+                    })
+        
+        elif resp.status_code == 400:
+            # Bad request - try with https:// prefix
+            if not query.startswith('http'):
+                search_url = f"https://feedsearch.dev/api/v1/search?url=https://{query}"
+                resp = requests.get(search_url, timeout=15)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    for feed in data:
+                        if feed.get('url'):
+                            feeds.append({
+                                'title': feed.get('title', 'Unknown Feed'),
+                                'url': feed['url'],
+                                'website': feed.get('site_url', ''),
+                                'description': feed.get('description', ''),
+                                'favicon': feed.get('favicon', '')
+                            })
+                            
     except Exception as e:
-        return jsonify({'error': f'Feed search failed: {str(e)}'}), 500
+        print(f"Feedsearch.dev error: {str(e)}")
+
+    return jsonify({'feeds': feeds})
 
 # Schedule feed refresh every 5 minutes
 scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=5)
