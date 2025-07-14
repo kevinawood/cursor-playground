@@ -1,0 +1,60 @@
+# Docker Compose configuration for RSS Reader
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: rss-reader-db
+    environment:
+      POSTGRES_DB: rss_reader
+      POSTGRES_USER: rss_user
+      POSTGRES_PASSWORD: rss_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rss_user -d rss_reader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Flask Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rss-reader-backend
+    environment:
+      DATABASE_URL: postgresql://rss_user:rss_password@db:5432/rss_reader
+      FLASK_ENV: development
+      FLASK_DEBUG: 1
+    volumes:
+      - ./backend:/app
+      - /app/venv  # Exclude virtual environment
+    ports:
+      - "5001:5001"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Vue.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rss-reader-frontend
+    environment:
+      VITE_API_URL: http://localhost:5001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Exclude node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data: 

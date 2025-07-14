@@ -22,6 +22,13 @@ A lightweight RSS feed aggregator built with Vue.js frontend and Flask backend.
 
 ## Quick Start
 
+### Option 1: Docker (Recommended)
+```bash
+# Prerequisites: Docker and Docker Compose installed
+./docker-start.sh
+```
+
+### Option 2: Manual Setup
 See [setup.md](./setup.md) for detailed setup instructions.
 
 ## Project Structure
@@ -31,6 +38,7 @@ rss-reader/
 ├── backend/           # Flask API server
 │   ├── app.py        # Main Flask application
 │   ├── requirements.txt
+│   ├── Dockerfile    # Backend container configuration
 │   └── env.example   # Environment configuration template
 ├── frontend/         # Vue.js frontend
 │   ├── src/
@@ -38,7 +46,10 @@ rss-reader/
 │   │   ├── App.vue   # Main app component
 │   │   └── main.js   # App entry point
 │   ├── package.json
+│   ├── Dockerfile    # Frontend container configuration
 │   └── vite.config.js
+├── docker-compose.yml # Multi-container orchestration
+├── docker-start.sh   # Docker startup script
 └── setup.md          # Setup instructions
 ```
 
@@ -55,6 +66,7 @@ rss-reader/
 
 ## Roadmap
 
+- [x] Docker containerization for consistent deployment
 - [ ] Reddit timeline integration
 - [ ] Spotify new releases
 - [ ] Rotten Tomatoes movie/show tracking
