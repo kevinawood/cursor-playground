@@ -35,7 +35,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        cd backend
+        cd projects/rss-reader/backend
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-test.txt
@@ -44,13 +44,13 @@ jobs:
       env:
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_rss_reader
       run: |
-        cd backend
+        cd projects/rss-reader/backend
         pytest tests/ -v --cov=. --cov-report=xml
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        file: ./backend/coverage.xml
+        file: ./projects/rss-reader/backend/coverage.xml
         flags: backend
         name: backend-coverage
 
@@ -65,22 +65,22 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: projects/rss-reader/frontend/package-lock.json
     
     - name: Install dependencies
       run: |
-        cd frontend
+        cd projects/rss-reader/frontend
         npm ci
     
     - name: Run frontend tests
       run: |
-        cd frontend
+        cd projects/rss-reader/frontend
         npm run test:coverage
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        file: ./frontend/coverage/lcov.info
+        file: ./projects/rss-reader/frontend/coverage/lcov.info
         flags: frontend
         name: frontend-coverage
 
@@ -115,36 +115,36 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: projects/rss-reader/frontend/package-lock.json
     
     - name: Install backend dependencies
       run: |
-        cd backend
+        cd projects/rss-reader/backend
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
     - name: Install frontend dependencies
       run: |
-        cd frontend
+        cd projects/rss-reader/frontend
         npm ci
     
     - name: Start backend server
       env:
         DATABASE_URL: postgresql://rss_user:rss_password@localhost:5432/rss_reader
       run: |
-        cd backend
+        cd projects/rss-reader/backend
         python app.py &
         sleep 10
     
     - name: Start frontend server
       run: |
-        cd frontend
+        cd projects/rss-reader/frontend
         npm run dev &
         sleep 10
     
     - name: Run E2E tests
       run: |
-        cd frontend
+        cd projects/rss-reader/frontend
         npm run test:e2e
     
     - name: Upload screenshots
@@ -152,7 +152,7 @@ jobs:
       if: failure()
       with:
         name: cypress-screenshots
-        path: frontend/cypress/screenshots
+        path: projects/rss-reader/frontend/cypress/screenshots
         if-no-files-found: ignore
     
     - name: Upload videos
@@ -160,5 +160,5 @@ jobs:
       if: always()
       with:
         name: cypress-videos
-        path: frontend/cypress/videos
+        path: projects/rss-reader/frontend/cypress/videos
         if-no-files-found: ignore 
