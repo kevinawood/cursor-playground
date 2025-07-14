@@ -152,7 +152,12 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between">
                     <p class="text-sm font-medium text-indigo-600 truncate">
-                      <a :href="article.link" target="_blank" class="hover:underline">
+                      <a 
+                        :href="article.link" 
+                        target="_blank" 
+                        class="hover:underline"
+                        @click="openArticle(article)"
+                      >
                         {{ article.title }}
                       </a>
                     </p>
@@ -172,9 +177,17 @@
                   </div>
                   <div class="mt-2 flex">
                     <div class="flex items-center text-sm text-gray-500">
+                      <img 
+                        v-if="article.feed_logo_url" 
+                        :src="article.feed_logo_url" 
+                        :alt="article.feed_name"
+                        class="w-4 h-4 mr-1 rounded-sm"
+                        @error="handleImageError"
+                      />
+                      <span v-else class="mr-1">{{ getFeedIcon(article.feed_name) }}</span>
                       <span class="truncate">{{ article.feed_name }}</span>
                       <span class="mx-1">•</span>
-                      <span>{{ formatDate(article.published_date) }}</span>
+                      <span>{{ formatTimeAgo(article.published_date) }}</span>
                       <span v-if="article.author" class="mx-1">•</span>
                       <span v-if="article.author" class="truncate">{{ article.author }}</span>
                     </div>
@@ -339,10 +352,53 @@ export default {
       return date.toLocaleDateString()
     },
     
+    formatTimeAgo(dateString) {
+      if (!dateString) return 'Unknown time'
+      const date = new Date(dateString)
+      const now = new Date()
+      const diffInSeconds = Math.floor((now - date) / 1000)
+      
+      if (diffInSeconds < 60) return 'Just now'
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+      if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`
+      if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo ago`
+      return `${Math.floor(diffInSeconds / 31536000)}y ago`
+    },
+    
     stripHtml(html) {
       const tmp = document.createElement('div')
       tmp.innerHTML = html
       return tmp.textContent || tmp.innerText || ''
+    },
+    
+    async openArticle(article) {
+      // Mark as read if not already read
+      if (!article.is_read) {
+        await this.toggleReadStatus(article)
+      }
+    },
+    
+    getFeedIcon(feedName) {
+      // Simple mapping of feed names to icons
+      const iconMap = {
+        'Wired Magazine': '🔬',
+        'TechCrunch': '📱',
+        'Hacker News': '💻',
+        'Ars Technica': '⚡',
+        'The Verge': '🎯',
+        'Engadget': '🔧',
+        'Mashable': '📰',
+        'Gizmodo': '🤖',
+        'VentureBeat': '💰',
+        'Recode': '📊'
+      }
+      return iconMap[feedName] || '📄'
+    },
+    
+    handleImageError(event) {
+      // Hide the image if it fails to load
+      event.target.style.display = 'none'
     }
   }
 }

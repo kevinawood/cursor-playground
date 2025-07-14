@@ -24,6 +24,7 @@ class Feed(db.Model):
     name = db.Column(db.String(100), nullable=False)
     url = db.Column(db.String(500), nullable=False, unique=True)
     category = db.Column(db.String(50), default='General')
+    logo_url = db.Column(db.String(500))  # Store the feed logo URL
     last_fetched = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -38,10 +39,35 @@ class Article(db.Model):
     author = db.Column(db.String(200))
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to Feed
+    feed = db.relationship('Feed', backref=db.backref('articles', lazy=True))
 
 # Scheduler for background tasks
 scheduler = BackgroundScheduler()
 scheduler.start()
+
+def extract_feed_logo(parsed_feed, feed_url):
+    """Extract logo URL from RSS feed"""
+    logo_url = None
+    
+    # Try to get logo from feed metadata
+    if hasattr(parsed_feed.feed, 'image'):
+        logo_url = parsed_feed.feed.image.get('href')
+    elif hasattr(parsed_feed.feed, 'logo'):
+        logo_url = parsed_feed.feed.logo
+    
+    # If no logo found, try to extract from the website's favicon
+    if not logo_url:
+        try:
+            from urllib.parse import urlparse
+            parsed_url = urlparse(feed_url)
+            base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            logo_url = f"{base_url}/favicon.ico"
+        except:
+            pass
+    
+    return logo_url
 
 def fetch_feed_articles(feed_id):
     """Fetch articles from a specific feed"""
@@ -78,6 +104,12 @@ def fetch_feed_articles(feed_id):
                 )
                 db.session.add(article)
         
+        # Extract and store logo if not already set
+        if not feed.logo_url:
+            logo_url = extract_feed_logo(parsed_feed, feed.url)
+            if logo_url:
+                feed.logo_url = logo_url
+        
         feed.last_fetched = datetime.utcnow()
         db.session.commit()
         
@@ -99,6 +131,7 @@ def get_feeds():
         'name': feed.name,
         'url': feed.url,
         'category': feed.category,
+        'logo_url': feed.logo_url,
         'last_fetched': feed.last_fetched.isoformat() if feed.last_fetched else None,
         'article_count': Article.query.filter_by(feed_id=feed.id).count()
     } for feed in feeds])
@@ -177,7 +210,8 @@ def get_articles():
             'author': article.author,
             'is_read': article.is_read,
             'feed_name': article.feed.name,
-            'feed_category': article.feed.category
+            'feed_category': article.feed.category,
+            'feed_logo_url': article.feed.logo_url
         } for article in articles.items],
         'total': articles.total,
         'pages': articles.pages,
