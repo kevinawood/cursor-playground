@@ -1,23 +1,23 @@
 # Docker Compose configuration for RSS Reader
 
 services:
-  # PostgreSQL Database
-  db:
-    image: postgres:15-alpine
-    container_name: rss-reader-db
-    environment:
-      POSTGRES_DB: rss_reader
-      POSTGRES_USER: rss_user
-      POSTGRES_PASSWORD: rss_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rss_user -d rss_reader"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # PostgreSQL Database - REMOVED (now using Supabase cloud database)
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: rss-reader-db
+  #   environment:
+  #     POSTGRES_DB: rss_reader
+  #     POSTGRES_USER: rss_user
+  #     POSTGRES_PASSWORD: rss_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U rss_user -d rss_reader"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   # Flask Backend
   backend:
@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: rss-reader-backend
     environment:
-      DATABASE_URL: postgresql://rss_user:rss_password@db:5432/rss_reader
+      DATABASE_URL: postgresql://postgres.ljdduznihrukurtjfnxx:a21ZEHNpXe3VbgR4@aws-0-us-east-2.pooler.supabase.com:5432/postgres
       FLASK_ENV: development
       FLASK_DEBUG: 1
     volumes:
@@ -34,9 +34,7 @@ services:
       - /app/venv  # Exclude virtual environment
     ports:
       - "5001:5001"
-    depends_on:
-      db:
-        condition: service_healthy
+    # Removed depends_on since we're not using local PostgreSQL
     restart: unless-stopped
 
   # Vue.js Frontend
@@ -56,5 +54,6 @@ services:
       - backend
     restart: unless-stopped
 
-volumes:
-  postgres_data: 
+# Removed volumes since we're not using local PostgreSQL
+# volumes:
+#   postgres_data: 

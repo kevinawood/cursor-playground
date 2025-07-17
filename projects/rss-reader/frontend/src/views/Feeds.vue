@@ -273,6 +273,7 @@ export default {
     async searchFeeds() {
       if (!this.searchQuery.trim()) return
       
+      console.log('Searching for:', this.searchQuery)
       this.searching = true
       this.searched = true
       try {
@@ -381,4 +382,4 @@ export default {
     }
   }
 }
-</script> 
+</script>
