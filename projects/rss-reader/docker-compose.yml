@@ -25,8 +25,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: rss-reader-backend
+    env_file:
+      - ./backend/.env
     environment:
-      DATABASE_URL: postgresql://rss_user:rss_password@db:5432/rss_reader
       FLASK_ENV: development
       FLASK_DEBUG: 1
     volumes:
@@ -34,9 +35,7 @@ services:
       - /app/venv  # Exclude virtual environment
     ports:
       - "5001:5001"
-    depends_on:
-      db:
-        condition: service_healthy
+    depends_on: []
     restart: unless-stopped
 
   # Vue.js Frontend
