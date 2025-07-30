@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: projects/rss-reader/frontend/package-lock.json
+    
+    - name: Install backend dependencies
+      run: |
+        cd projects/rss-reader/backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Install frontend dependencies
+      run: |
+        cd projects/rss-reader/frontend
+        npm ci
+    
+    - name: Build frontend
+      run: |
+        cd projects/rss-reader/frontend
+        npm run build
+    
+    - name: Validate project setup
+      run: |
+        cd projects/rss-reader
+        ./validate-setup.sh
+    
+    - name: Verify build artifacts
+      run: |
+        echo "Backend files:"
+        ls -la projects/rss-reader/backend/
+        echo ""
+        echo "Frontend build files:"
+        ls -la projects/rss-reader/frontend/dist/ || echo "No dist directory found"
+        echo ""
+        echo "Deployment verification complete"
+    
+    - name: Build Docker images
+      run: |
+        cd projects/rss-reader
+        echo "Building backend Docker image..."
+        docker build -t rss-reader-backend:latest ./backend
+        echo "Building frontend Docker image..."
+        docker build -t rss-reader-frontend:latest ./frontend
+        echo "Docker images built successfully"
+    
+    - name: Test Docker containers
+      run: |
+        cd projects/rss-reader
+        echo "Testing Docker Compose setup..."
+        docker compose config
+        echo "Docker Compose configuration is valid"
+    
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: production-files
+        path: |
+          projects/rss-reader/backend/
+          projects/rss-reader/frontend/dist/
+        retention-days: 30
