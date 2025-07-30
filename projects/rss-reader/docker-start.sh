@@ -9,6 +9,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Change to the project directory
 cd "$SCRIPT_DIR"
 
+# Export UID and GID for Linux compatibility
+export DOCKER_UID=$(id -u)
+export DOCKER_GID=$(id -g)
+
 echo "🐳 Starting RSS Reader with Docker Compose..."
 echo "📍 Backend: http://localhost:5001"
 echo "📍 Frontend: http://localhost:3000"
