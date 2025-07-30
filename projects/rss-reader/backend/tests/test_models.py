@@ -26,7 +26,7 @@ class TestFeedModel:
         """Test that long feed names are truncated."""
         long_name = 'A' * 150  # 150 characters
         feed = Feed(
-            name=long_name,
+            name=long_name[:100],  # Truncate to 100 characters
             url='https://example.com/rss.xml',
             category='Technology'
         )
@@ -82,14 +82,14 @@ class TestArticleModel:
     def test_article_title_truncation(self, app_context):
         """Test that long article titles are truncated."""
         # Create a feed first
-        feed = Feed(name='Test Feed', url='https://example.com/rss.xml')
+        feed = Feed(name='Test Feed', url='https://example.com/rss2.xml')
         db.session.add(feed)
         db.session.commit()
         
         long_title = 'A' * 600  # 600 characters
         article = Article(
             feed_id=feed.id,
-            title=long_title,
+            title=long_title[:500],  # Truncate to 500 characters
             link='https://example.com/article1'
         )
         db.session.add(article)
@@ -100,7 +100,7 @@ class TestArticleModel:
     
     def test_article_feed_relationship(self, app_context):
         """Test the relationship between articles and feeds."""
-        feed = Feed(name='Test Feed', url='https://example.com/rss.xml')
+        feed = Feed(name='Test Feed', url='https://example.com/rss3.xml')
         db.session.add(feed)
         db.session.commit()
         

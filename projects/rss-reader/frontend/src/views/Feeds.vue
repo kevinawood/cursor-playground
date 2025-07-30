@@ -231,7 +231,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../config/axios'
 
 export default {
   name: 'Feeds',
@@ -261,7 +261,7 @@ export default {
     async loadFeeds() {
       this.loading = true
       try {
-        const response = await axios.get('/api/feeds')
+        const response = await api.get('/api/feeds')
         this.feeds = response.data
       } catch (error) {
         console.error('Error loading feeds:', error)
@@ -277,7 +277,7 @@ export default {
       this.searching = true
       this.searched = true
       try {
-        const response = await axios.get(`/api/feed-search?q=${encodeURIComponent(this.searchQuery)}`)
+        const response = await api.get(`/api/feed-search?q=${encodeURIComponent(this.searchQuery)}`)
         this.searchResults = response.data.feeds || []
       } catch (error) {
         console.error('Error searching feeds:', error)
@@ -303,7 +303,7 @@ export default {
         else if (title.includes('business') || description.includes('business')) category = 'Business'
         else if (title.includes('politic') || description.includes('politic')) category = 'Politics'
 
-        const response = await axios.post('/api/feeds', {
+        const response = await api.post('/api/feeds', {
           name: feed.title,
           url: feed.url,
           category: category
@@ -339,7 +339,7 @@ export default {
     async addFeed() {
       this.adding = true
       try {
-        const response = await axios.post('/api/feeds', this.newFeed)
+        const response = await api.post('/api/feeds', this.newFeed)
         this.feeds.push({
           id: response.data.id,
           name: response.data.name,
@@ -362,7 +362,7 @@ export default {
       if (!confirm(`Are you sure you want to delete "${feed.name}"?`)) return
       
       try {
-        await axios.delete(`/api/feeds/${feed.id}`)
+        await api.delete(`/api/feeds/${feed.id}`)
         this.feeds = this.feeds.filter(f => f.id !== feed.id)
       } catch (error) {
         console.error('Error deleting feed:', error)

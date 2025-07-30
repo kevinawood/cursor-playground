@@ -363,7 +363,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../config/axios'
 
 export default {
   name: 'Home',
@@ -415,7 +415,7 @@ export default {
           params.feed_id = this.selectedFeedId
         }
         
-        const response = await axios.get('/api/articles', { params })
+        const response = await api.get('/api/articles', { params })
         this.articles = response.data.articles
         this.totalPages = response.data.pages
       } catch (error) {
@@ -427,7 +427,7 @@ export default {
     
     async loadCategories() {
       try {
-        const response = await axios.get('/api/categories')
+        const response = await api.get('/api/categories')
         this.categories = response.data
       } catch (error) {
         console.error('Error loading categories:', error)
@@ -436,7 +436,7 @@ export default {
     
     async loadStats() {
       try {
-        const response = await axios.get('/api/stats')
+        const response = await api.get('/api/stats')
         this.stats = response.data
       } catch (error) {
         console.error('Error loading stats:', error)
@@ -446,7 +446,7 @@ export default {
     async loadFeeds() {
       this.feedsLoading = true
       try {
-        const response = await axios.get('/api/feeds')
+        const response = await api.get('/api/feeds')
         this.feeds = response.data
       } catch (error) {
         console.error('Error loading feeds:', error)
@@ -458,7 +458,7 @@ export default {
     async toggleReadStatus(article) {
       try {
         const endpoint = article.is_read ? 'unread' : 'read'
-        await axios.put(`/api/articles/${article.id}/${endpoint}`)
+        await api.put(`/api/articles/${article.id}/${endpoint}`)
         article.is_read = !article.is_read
         await this.loadStats()
       } catch (error) {
@@ -552,7 +552,7 @@ export default {
 
     async refreshFeeds() {
       try {
-        await axios.post('/api/refresh-feeds')
+        await api.post('/api/refresh-feeds')
         await this.loadFeeds()
         await this.loadArticles()
         await this.loadStats()
