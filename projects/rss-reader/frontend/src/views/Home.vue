@@ -108,6 +108,14 @@
             </p>
           </div>
 
+          <!-- Refresh Feeds Button -->
+          <button
+            @click="refreshFeeds"
+            class="ml-4 px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Refresh Feeds
+          </button>
+
           <!-- Filters -->
           <div class="flex space-x-4">
             <!-- Category filter -->
@@ -540,6 +548,18 @@ export default {
       if (!this.selectedFeedId) return 'All Articles'
       const feed = this.feeds.find(f => f.id === this.selectedFeedId)
       return feed ? feed.name : 'Unknown Feed'
+    },
+
+    async refreshFeeds() {
+      try {
+        await axios.post('/api/refresh-feeds')
+        await this.loadFeeds()
+        await this.loadArticles()
+        await this.loadStats()
+      } catch (error) {
+        alert('Failed to refresh feeds!')
+        console.error('Error refreshing feeds:', error)
+      }
     }
   }
 }

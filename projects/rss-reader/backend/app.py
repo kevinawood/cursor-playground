@@ -327,6 +327,11 @@ def feed_search():
 
     return jsonify({'feeds': feeds})
 
+@app.route('/api/refresh-feeds', methods=['POST'])
+def manual_refresh_feeds():
+    refresh_all_feeds()
+    return jsonify({'message': 'Feeds refreshed successfully'})
+
 # Schedule feed refresh every 5 minutes
 scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=5)
 
