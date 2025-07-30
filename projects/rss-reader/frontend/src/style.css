@@ -4,4 +4,47 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Mobile optimizations */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Improve touch targets on mobile */
+  @media (max-width: 640px) {
+    button {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+}
+
+@layer utilities {
+  /* Custom line clamp utilities for better mobile text truncation */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Better mobile scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Improved mobile typography */
+  .mobile-readable {
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
 } 

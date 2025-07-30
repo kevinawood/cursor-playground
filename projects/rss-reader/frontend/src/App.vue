@@ -1,12 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b">
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-40">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+        <div class="flex justify-between h-14 sm:h-16">
           <div class="flex">
             <div class="flex-shrink-0 flex items-center">
-              <h1 class="text-xl font-bold text-gray-900">RSS Reader</h1>
+              <h1 class="text-lg sm:text-xl font-bold text-gray-900">RSS Reader</h1>
             </div>
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <router-link
@@ -26,8 +26,8 @@
             </div>
           </div>
           <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <span class="text-sm text-gray-500">
+            <div class="flex-shrink-0 hidden sm:block">
+              <span class="text-xs sm:text-sm text-gray-500">
                 Auto-refresh every 5 minutes
               </span>
             </div>
@@ -37,7 +37,7 @@
     </nav>
 
     <!-- Main content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto py-4 sm:py-6 sm:px-6 lg:px-8">
       <router-view />
     </main>
   </div>
