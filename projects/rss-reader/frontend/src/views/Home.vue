@@ -7,7 +7,7 @@
         darkMode ? 'bg-gray-800' : 'bg-white',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
-      style="top: 3.5rem; height: calc(100vh - 3.5rem);"
+      style="top: 3.5rem; height: calc(100vh - 3.5rem); left: -22em"
     >
       <!-- Sidebar Header -->
       <div class="flex items-center justify-between h-12 sm:h-16 px-3 transition-colors duration-200" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
@@ -719,21 +719,92 @@ export default {
     },
 
     calculateReadingTime(article) {
-      const text = article.description || article.title;
-      const words = text.split(/\s+/).filter(word => word.length > 0);
-      const readingSpeed = 200; // Words per minute
-      const minutes = Math.ceil(words.length / readingSpeed);
-      return `${minutes} min read`;
+      // Get text content from title and description
+      const title = article.title || '';
+      const description = article.description || '';
+      
+      // Clean and count words
+      const titleWords = title.split(/\s+/).filter(word => word.length > 0).length;
+      const descWords = description.split(/\s+/).filter(word => word.length > 0).length;
+      
+      // Calculate estimated reading time based on content length
+      let estimatedWords = 0;
+      
+      if (descWords > 50) {
+        // If description is substantial, use it as base
+        estimatedWords = descWords * 1.5; // Assume description is ~2/3 of full article
+      } else if (titleWords > 10) {
+        // If title is long, estimate based on title length
+        estimatedWords = titleWords * 15; // Long titles often indicate longer articles
+      } else {
+        // Default estimation based on feed type and title
+        const feedName = article.feed_name || '';
+        if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
+          estimatedWords = 800; // Tech articles tend to be longer
+        } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
+          estimatedWords = 1200; // Magazine articles are typically longer
+        } else {
+          estimatedWords = 600; // Default medium length
+        }
+      }
+      
+      // Apply reading speed (200 words per minute)
+      const readingSpeed = 200;
+      const minutes = Math.ceil(estimatedWords / readingSpeed);
+      
+      // Ensure minimum of 1 minute
+      const finalMinutes = Math.max(1, minutes);
+      
+      // Format the output
+      if (finalMinutes === 1) {
+        return '1 min read';
+      } else if (finalMinutes < 60) {
+        return `${finalMinutes} min read`;
+      } else {
+        const hours = Math.floor(finalMinutes / 60);
+        const remainingMinutes = finalMinutes % 60;
+        if (remainingMinutes === 0) {
+          return `${hours}h read`;
+        } else {
+          return `${hours}h ${remainingMinutes}m read`;
+        }
+      }
     },
 
     getReadingTimeColor(article) {
-      const text = article.description || article.title;
-      const words = text.split(/\s+/).filter(word => word.length > 0);
-      const readingSpeed = 200; // Words per minute
-      const minutes = Math.ceil(words.length / readingSpeed);
+      // Get text content from title and description
+      const title = article.title || '';
+      const description = article.description || '';
+      
+      // Clean and count words
+      const titleWords = title.split(/\s+/).filter(word => word.length > 0).length;
+      const descWords = description.split(/\s+/).filter(word => word.length > 0).length;
+      
+      // Calculate estimated reading time based on content length
+      let estimatedWords = 0;
+      
+      if (descWords > 50) {
+        estimatedWords = descWords * 1.5;
+      } else if (titleWords > 10) {
+        estimatedWords = titleWords * 15;
+      } else {
+        const feedName = article.feed_name || '';
+        if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
+          estimatedWords = 800;
+        } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
+          estimatedWords = 1200;
+        } else {
+          estimatedWords = 600;
+        }
+      }
+      
+      const readingSpeed = 200;
+      const minutes = Math.ceil(estimatedWords / readingSpeed);
+      const finalMinutes = Math.max(1, minutes);
 
-      if (minutes < 1) return 'bg-green-100 text-green-800';
-      if (minutes < 5) return 'bg-yellow-100 text-yellow-800';
+      // Color coding based on estimated reading time
+      if (finalMinutes <= 3) return 'bg-green-100 text-green-800';
+      if (finalMinutes <= 8) return 'bg-yellow-100 text-yellow-800';
       return 'bg-red-100 text-red-800';
     }
   }

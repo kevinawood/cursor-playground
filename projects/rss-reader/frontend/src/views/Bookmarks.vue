@@ -417,19 +417,92 @@ export default {
     },
 
     calculateReadingTime(article) {
-      const text = article.description || article.summary || article.title;
-      const words = text.split(/\s+/).length;
-      const readingTime = Math.ceil(words / 200); // Average reading speed is 200 words per minute
-      return `${readingTime} min read`;
+      // Get text content from title and description
+      const title = article.title || '';
+      const description = article.description || '';
+      
+      // Clean and count words
+      const titleWords = title.split(/\s+/).filter(word => word.length > 0).length;
+      const descWords = description.split(/\s+/).filter(word => word.length > 0).length;
+      
+      // Calculate estimated reading time based on content length
+      let estimatedWords = 0;
+      
+      if (descWords > 50) {
+        // If description is substantial, use it as base
+        estimatedWords = descWords * 1.5; // Assume description is ~2/3 of full article
+      } else if (titleWords > 10) {
+        // If title is long, estimate based on title length
+        estimatedWords = titleWords * 15; // Long titles often indicate longer articles
+      } else {
+        // Default estimation based on feed type and title
+        const feedName = article.feed_name || '';
+        if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
+          estimatedWords = 800; // Tech articles tend to be longer
+        } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
+          estimatedWords = 1200; // Magazine articles are typically longer
+        } else {
+          estimatedWords = 600; // Default medium length
+        }
+      }
+      
+      // Apply reading speed (200 words per minute)
+      const readingSpeed = 200;
+      const minutes = Math.ceil(estimatedWords / readingSpeed);
+      
+      // Ensure minimum of 1 minute
+      const finalMinutes = Math.max(1, minutes);
+      
+      // Format the output
+      if (finalMinutes === 1) {
+        return '1 min read';
+      } else if (finalMinutes < 60) {
+        return `${finalMinutes} min read`;
+      } else {
+        const hours = Math.floor(finalMinutes / 60);
+        const remainingMinutes = finalMinutes % 60;
+        if (remainingMinutes === 0) {
+          return `${hours}h read`;
+        } else {
+          return `${hours}h ${remainingMinutes}m read`;
+        }
+      }
     },
 
     getReadingTimeColor(article) {
-      const text = article.description || article.summary || article.title;
-      const words = text.split(/\s+/).length;
-      const readingTime = Math.ceil(words / 200);
+      // Get text content from title and description
+      const title = article.title || '';
+      const description = article.description || '';
+      
+      // Clean and count words
+      const titleWords = title.split(/\s+/).filter(word => word.length > 0).length;
+      const descWords = description.split(/\s+/).filter(word => word.length > 0).length;
+      
+      // Calculate estimated reading time based on content length
+      let estimatedWords = 0;
+      
+      if (descWords > 50) {
+        estimatedWords = descWords * 1.5;
+      } else if (titleWords > 10) {
+        estimatedWords = titleWords * 15;
+      } else {
+        const feedName = article.feed_name || '';
+        if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
+          estimatedWords = 800;
+        } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
+          estimatedWords = 1200;
+        } else {
+          estimatedWords = 600;
+        }
+      }
+      
+      const readingSpeed = 200;
+      const minutes = Math.ceil(estimatedWords / readingSpeed);
+      const finalMinutes = Math.max(1, minutes);
 
-      if (readingTime < 5) return 'bg-green-100 text-green-800';
-      if (readingTime < 10) return 'bg-yellow-100 text-yellow-800';
+      // Color coding based on estimated reading time
+      if (finalMinutes <= 3) return 'bg-green-100 text-green-800';
+      if (finalMinutes <= 8) return 'bg-yellow-100 text-yellow-800';
       return 'bg-red-100 text-red-800';
     }
   }
