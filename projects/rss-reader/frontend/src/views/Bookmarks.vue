@@ -62,7 +62,7 @@
                           target="_blank" 
                           class="hover:underline text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors duration-200"
                           :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
-                          @click.prevent="openArticle(article)"
+                          @click="openArticle(article, $event)"
                         >
                           {{ article.title }}
                         </a>
@@ -378,21 +378,25 @@ export default {
       return tmp.textContent || tmp.innerText || ''
     },
     
-    async openArticle(article) {
-      // Mark as read if not already read
-      if (!article.is_read) {
-        await this.toggleReadStatus(article)
-      }
-      
+    async openArticle(article, event) {
       // Check if this is a Hacker News article
       if (isHackerNewsArticle(article)) {
+        // Prevent default for HN articles to show modal
+        if (event) {
+          event.preventDefault();
+        }
         this.hnModalContent = getHNModalContent(article)
         this.showHNModal = true
         return
       }
       
-      // For non-HN articles, open directly
-      window.open(article.link, '_blank')
+      // For non-HN articles, let the default link behavior happen
+      // Just mark as read if not already read
+      if (!article.is_read) {
+        await this.toggleReadStatus(article)
+      }
+      
+      // Don't prevent default - let the link open naturally
     },
     
     getFeedIcon(feedName) {
