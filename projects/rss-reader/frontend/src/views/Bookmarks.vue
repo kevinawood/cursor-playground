@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-gray-900' : 'bg-gray-50'">
     <!-- Header -->
-    <div class="transition-colors duration-200 px-4 sm:px-6 lg:px-8" :class="darkMode ? 'bg-gray-800 shadow-sm border-gray-700' : 'bg-white shadow-sm border-b'">
+    <div class="transition-colors duration-200 px-4 sm:px-6 lg:px-6" :class="darkMode ? 'bg-gray-800 shadow-sm border-gray-700' : 'bg-white shadow-sm border-b'">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
           <h1 class="text-xl lg:text-2xl font-bold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Bookmarked Articles</h1>
@@ -21,8 +21,8 @@
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Content - Made wider to use more screen real estate -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-6">
       <div class="px-4 sm:px-0">
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-12">
@@ -51,17 +51,18 @@
         <div v-else class="transition-colors duration-200 shadow overflow-hidden sm:rounded-md" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
           <ul class="transition-colors duration-200" :class="darkMode ? 'divide-gray-700' : 'divide-gray-200'">
             <li v-for="article in articles" :key="article.id">
-              <div class="px-4 py-4 lg:px-6">
+              <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
                 <div class="space-y-3">
                   <!-- Title and Action Buttons -->
                   <div class="flex items-start justify-between">
-                    <div class="flex-1 min-w-0 pr-2">
-                      <h3 class="text-base font-medium text-gray-900 leading-6">
+                    <div class="flex-1 min-w-0 pr-3">
+                      <h3 class="text-base font-medium text-gray-900 leading-6 transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">
                         <a 
                           :href="article.link" 
                           target="_blank" 
-                          class="hover:underline text-indigo-600 hover:text-indigo-800 cursor-pointer"
-                          @click.prevent="openArticle(article)"
+                          class="hover:underline text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors duration-200"
+                          :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
+                          @click="openArticle(article, $event)"
                         >
                           {{ article.title }}
                         </a>
@@ -112,7 +113,7 @@
                   </div>
 
                   <!-- Description -->
-                  <div v-if="article.description" class="text-sm text-gray-600 leading-5 line-clamp-3">
+                  <div v-if="article.description" class="text-sm text-gray-600 leading-5 line-clamp-3 transition-colors duration-200" :class="darkMode ? 'text-gray-300' : 'text-gray-600'">
                     {{ stripHtml(article.description) }}
                   </div>
 
@@ -131,8 +132,8 @@
                     </div>
                   </div>
 
-                  <!-- Meta information -->
-                  <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                  <!-- Meta information - Added reading time -->
+                  <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
                     <div class="flex items-center">
                       <img 
                         v-if="article.feed_logo_url" 
@@ -146,6 +147,15 @@
                     </div>
                     <span class="text-gray-400">•</span>
                     <span>{{ formatTimeAgo(article.published_date) }}</span>
+                    <span class="text-gray-400">•</span>
+                    <!-- Reading Time Badge -->
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-200" 
+                          :class="getReadingTimeColor(article)">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      {{ calculateReadingTime(article) }}
+                    </span>
                     <span v-if="article.author" class="text-gray-400">•</span>
                     <span v-if="article.author" class="truncate">{{ article.author }}</span>
                   </div>
@@ -232,12 +242,12 @@ export default {
   data() {
     return {
       articles: [],
-      loading: true,
-      currentPage: 1,
-      totalPages: 1,
       stats: {
         bookmarked_articles: 0
       },
+      loading: true,
+      currentPage: 1,
+      totalPages: 1,
       // HN Discussion Modal
       showHNModal: false,
       hnModalContent: {
@@ -246,7 +256,11 @@ export default {
         discussionUrl: '',
         searchUrl: '',
         feedName: ''
-      }
+      },
+      // Reading time cache
+      readingTimeCache: new Map(),
+      // AI Summary cache
+      summaryCache: new Map()
     }
   },
   async mounted() {
@@ -314,12 +328,21 @@ export default {
         return
       }
       
+      // Check cache first
+      if (this.summaryCache.has(article.id)) {
+        article.summary = this.summaryCache.get(article.id);
+        return;
+      }
+      
       // Set loading state
       this.$set(article, 'summarizing', true)
       
       try {
         const response = await api.post(`/api/articles/${article.id}/summarize`)
         this.$set(article, 'summary', response.data.summary)
+        
+        // Cache the summary
+        this.summaryCache.set(article.id, response.data.summary);
       } catch (error) {
         console.error('Error generating summary:', error)
         alert('Failed to generate summary. Please try again.')
@@ -355,21 +378,25 @@ export default {
       return tmp.textContent || tmp.innerText || ''
     },
     
-    async openArticle(article) {
-      // Mark as read if not already read
-      if (!article.is_read) {
-        await this.toggleReadStatus(article)
-      }
-      
+    async openArticle(article, event) {
       // Check if this is a Hacker News article
       if (isHackerNewsArticle(article)) {
+        // Prevent default for HN articles to show modal
+        if (event) {
+          event.preventDefault();
+        }
         this.hnModalContent = getHNModalContent(article)
         this.showHNModal = true
         return
       }
       
-      // For non-HN articles, open directly
-      window.open(article.link, '_blank')
+      // For non-HN articles, let the default link behavior happen
+      // Just mark as read if not already read
+      if (!article.is_read) {
+        await this.toggleReadStatus(article)
+      }
+      
+      // Don't prevent default - let the link open naturally
     },
     
     getFeedIcon(feedName) {
@@ -404,6 +431,108 @@ export default {
       if (article && !article.is_read) {
         await this.toggleReadStatus(article)
       }
+    },
+
+    calculateReadingTime(article) {
+      // Check cache first
+      if (this.readingTimeCache.has(article.id)) {
+        return this.readingTimeCache.get(article.id);
+      }
+
+      // For now, return a loading state while we fetch the actual reading time
+      this.fetchAccurateReadingTime(article);
+      return 'Calculating...';
+    },
+
+    async fetchAccurateReadingTime(article) {
+      try {
+        const response = await api.get(`/api/articles/${article.id}/reading-time`);
+        const result = response.data;
+        
+        // Cache the result
+        this.readingTimeCache.set(article.id, result.reading_time);
+        
+        // Force re-render to update the display
+        this.$forceUpdate();
+        
+      } catch (error) {
+        console.error('Error fetching reading time:', error);
+        // Fallback to estimation
+        const fallbackTime = this.calculateFallbackReadingTime(article);
+        this.readingTimeCache.set(article.id, fallbackTime);
+        this.$forceUpdate();
+      }
+    },
+
+    calculateFallbackReadingTime(article) {
+      // Fallback estimation when API fails
+      const title = article.title || '';
+      const description = article.description || '';
+      
+      const titleWords = title.split(/\s+/).filter(word => word.length > 0).length;
+      const descWords = description.split(/\s+/).filter(word => word.length > 0).length;
+      
+      let estimatedWords = 0;
+      
+      if (descWords > 100) {
+        estimatedWords = descWords * 2;
+      } else if (titleWords > 10) {
+        estimatedWords = titleWords * 20;
+      } else {
+        const feedName = article.feed_name || '';
+        if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
+          estimatedWords = 800;
+        } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
+          estimatedWords = 1500;
+        } else {
+          estimatedWords = 600;
+        }
+      }
+      
+      const readingSpeed = 200;
+      const minutes = Math.ceil(estimatedWords / readingSpeed);
+      const finalMinutes = Math.max(1, minutes);
+      
+      if (finalMinutes === 1) {
+        return '1 min read (estimated)';
+      } else if (finalMinutes < 60) {
+        return `${finalMinutes} min read (estimated)`;
+      } else {
+        const hours = Math.floor(finalMinutes / 60);
+        const remainingMinutes = finalMinutes % 60;
+        if (remainingMinutes === 0) {
+          return `${hours}h read (estimated)`;
+        } else {
+          return `${hours}h ${remainingMinutes}m read (estimated)`;
+        }
+      }
+    },
+
+    getReadingTimeColor(article) {
+      // Check cache first
+      const cachedResult = this.readingTimeCache.get(article.id);
+      if (cachedResult) {
+        const minutes = this.extractMinutesFromReadingTime(cachedResult);
+        return this.getColorForMinutes(minutes);
+      }
+
+      // Default color for "Calculating..." state
+      return 'bg-gray-100 text-gray-800';
+    },
+
+    extractMinutesFromReadingTime(readingTime) {
+      if (readingTime.includes('h')) {
+        const hours = parseInt(readingTime.match(/(\d+)h/)?.[1] || 0);
+        const minutes = parseInt(readingTime.match(/(\d+)m/)?.[1] || 0);
+        return hours * 60 + minutes;
+      }
+      return parseInt(readingTime.match(/(\d+)/)?.[1] || 1);
+    },
+
+    getColorForMinutes(minutes) {
+      if (minutes <= 3) return 'bg-green-100 text-green-800';
+      if (minutes <= 8) return 'bg-yellow-100 text-yellow-800';
+      return 'bg-red-100 text-red-800';
     }
   }
 }

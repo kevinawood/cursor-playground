@@ -399,6 +399,107 @@ def summarize_article(article_id):
         else:
             return jsonify({'error': f'Failed to generate summary: {error_msg}'}), 500
 
+@app.route('/api/articles/<int:article_id>/reading-time', methods=['GET'])
+def get_article_reading_time(article_id):
+    """Get accurate reading time by scraping article content"""
+    article = Article.query.get_or_404(article_id)
+    
+    try:
+        # Use the same headers as the summarize endpoint
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        }
+        
+        response = requests.get(article.link, timeout=10, headers=headers)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(["script", "style", "nav", "header", "footer", "aside"]):
+            script.decompose()
+        
+        # Try to find the main article content
+        # Common selectors for article content
+        content_selectors = [
+            'article',
+            '[class*="article"]',
+            '[class*="content"]',
+            '[class*="post"]',
+            '[class*="story"]',
+            'main',
+            '.entry-content',
+            '.post-content',
+            '.article-content',
+            '.story-content'
+        ]
+        
+        content_text = ""
+        
+        # Try each selector
+        for selector in content_selectors:
+            elements = soup.select(selector)
+            if elements:
+                # Get text from the largest element (likely the main content)
+                largest_element = max(elements, key=lambda x: len(x.get_text()))
+                content_text = largest_element.get_text()
+                break
+        
+        # If no specific content found, use body text
+        if not content_text:
+            content_text = soup.get_text()
+        
+        # Clean the text
+        lines = (line.strip() for line in content_text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = ' '.join(chunk for chunk in chunks if chunk)
+        
+        # Count words
+        words = text.split()
+        word_count = len(words)
+        
+        # Calculate reading time (200 words per minute)
+        reading_speed = 200
+        minutes = max(1, round(word_count / reading_speed))
+        
+        # Format the result
+        if minutes < 60:
+            reading_time = f"{minutes} min read"
+        else:
+            hours = minutes // 60
+            remaining_minutes = minutes % 60
+            if remaining_minutes == 0:
+                reading_time = f"{hours}h read"
+            else:
+                reading_time = f"{hours}h {remaining_minutes}m read"
+        
+        return jsonify({
+            'reading_time': reading_time,
+            'word_count': word_count,
+            'minutes': minutes,
+            'url': article.link
+        })
+        
+    except requests.RequestException as e:
+        # Fallback to description-based estimation
+        fallback_words = len((article.description or article.title or "").split())
+        fallback_minutes = max(1, round(fallback_words * 2 / 200))  # Assume description is ~1/2 of article
+        
+        return jsonify({
+            'reading_time': f"{fallback_minutes} min read (estimated)",
+            'word_count': fallback_words,
+            'minutes': fallback_minutes,
+            'url': article.link,
+            'note': 'Using fallback estimation - could not fetch article content'
+        })
+    except Exception as e:
+        return jsonify({'error': f'Failed to calculate reading time: {str(e)}'}), 500
+
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
     categories = db.session.query(Feed.category).distinct().all()
