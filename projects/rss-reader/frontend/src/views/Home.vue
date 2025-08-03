@@ -277,9 +277,9 @@
                           <a 
                             :href="article.link" 
                             target="_blank" 
-                            class="hover:underline transition-colors duration-200"
+                            class="hover:underline transition-colors duration-200 cursor-pointer"
                             :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
-                            @click="openArticle(article)"
+                            @click.prevent="openArticle(article)"
                           >
                             {{ article.title }}
                           </a>
@@ -421,14 +421,28 @@
         </div>
       </div>
     </div>
+    
+    <!-- HN Discussion Modal -->
+    <HNDiscussionModal
+      :show="showHNModal"
+      :modal-content="hnModalContent"
+      :dark-mode="darkMode"
+      @close="closeHNModal"
+      @choice-made="handleHNChoice"
+    />
   </div>
 </template>
 
 <script>
 import api from '../config/axios'
+import { isHackerNewsArticle, getHNModalContent } from '../utils/hnUtils'
+import HNDiscussionModal from '../components/HNDiscussionModal.vue'
 
 export default {
   name: 'Home',
+  components: {
+    HNDiscussionModal
+  },
   props: {
     darkMode: {
       type: Boolean,
@@ -454,7 +468,16 @@ export default {
       unreadOnly: false,
       selectedFeedId: null,
       sidebarOpen: false,
-      refreshing: false
+      refreshing: false,
+      // HN Discussion Modal
+      showHNModal: false,
+      hnModalContent: {
+        title: '',
+        originalUrl: '',
+        discussionUrl: '',
+        searchUrl: '',
+        feedName: ''
+      }
     }
   },
   async mounted() {
@@ -609,6 +632,16 @@ export default {
       if (!article.is_read) {
         await this.toggleReadStatus(article)
       }
+      
+      // Check if this is a Hacker News article
+      if (isHackerNewsArticle(article)) {
+        this.hnModalContent = getHNModalContent(article)
+        this.showHNModal = true
+        return
+      }
+      
+      // For non-HN articles, open directly
+      window.open(article.link, '_blank')
     },
     
     getFeedIcon(feedName) {
@@ -661,6 +694,18 @@ export default {
         console.error('Error refreshing feeds:', error)
       } finally {
         this.refreshing = false
+      }
+    },
+    
+    closeHNModal() {
+      this.showHNModal = false
+    },
+    
+    async handleHNChoice(choice) {
+      // Find the article that was clicked
+      const article = this.articles.find(a => a.title === this.hnModalContent.title)
+      if (article && !article.is_read) {
+        await this.toggleReadStatus(article)
       }
     }
   }
