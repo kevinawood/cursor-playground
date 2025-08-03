@@ -7,7 +7,7 @@
         darkMode ? 'bg-gray-800' : 'bg-white',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
-      style="top: 3.5rem; height: calc(100vh - 3.5rem); left: -22em"
+      style="top: 3.5rem; height: calc(100vh - 3.5rem);"
     >
       <!-- Sidebar Header -->
       <div class="flex items-center justify-between h-12 sm:h-16 px-3 transition-colors duration-200" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">

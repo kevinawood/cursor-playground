@@ -3,21 +3,26 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
+# Create non-root user first
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies as root first
 RUN npm ci
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+# Change ownership of node_modules to nextjs user
+RUN chown -R nextjs:nodejs /app/node_modules
 
 # Copy application code
 COPY . .
 
-# Change ownership of the app directory
+# Change ownership of the entire app directory
 RUN chown -R nextjs:nodejs /app
+
+# Switch to nextjs user
 USER nextjs
 
 # Expose port
