@@ -6,10 +6,12 @@ import './style.css'
 // Components
 import Home from './views/Home.vue'
 import Feeds from './views/Feeds.vue'
+import Bookmarks from './views/Bookmarks.vue'
 
 const routes = [
   { path: '/', component: Home },
-  { path: '/feeds', component: Feeds }
+  { path: '/feeds', component: Feeds },
+  { path: '/bookmarks', component: Bookmarks }
 ]
 
 const router = createRouter({

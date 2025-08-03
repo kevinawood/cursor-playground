@@ -257,7 +257,7 @@
               <li v-for="article in articles" :key="article.id">
                 <div class="px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
                   <div class="space-y-3">
-                    <!-- Title and Read Status -->
+                    <!-- Title and Action Buttons -->
                     <div class="flex items-start justify-between">
                       <div class="flex-1 min-w-0 pr-2">
                         <h3 class="text-sm sm:text-base font-medium text-gray-900 leading-5 sm:leading-6">
@@ -271,7 +271,36 @@
                           </a>
                         </h3>
                       </div>
-                      <div class="flex-shrink-0">
+                      <div class="flex-shrink-0 flex items-center space-x-1">
+                        <!-- Summarize Button -->
+                        <button
+                          @click="summarizeArticle(article)"
+                          :disabled="article.summarizing"
+                          class="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+                          :title="article.summary ? 'View Summary' : 'Generate Summary'"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                        </button>
+                        
+                        <!-- Bookmark Button -->
+                        <button
+                          @click="toggleBookmark(article)"
+                          :class="[
+                            'p-1.5 rounded-md transition-colors',
+                            article.is_bookmarked
+                              ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50'
+                              : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50'
+                          ]"
+                          :title="article.is_bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'"
+                        >
+                          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                          </svg>
+                        </button>
+                        
+                        <!-- Read Status Button -->
                         <button
                           @click="toggleReadStatus(article)"
                           :class="[
@@ -289,6 +318,21 @@
                     <!-- Description -->
                     <div v-if="article.description" class="text-sm text-gray-600 leading-5 line-clamp-3 sm:line-clamp-2">
                       {{ stripHtml(article.description) }}
+                    </div>
+
+                    <!-- AI Summary -->
+                    <div v-if="article.summary" class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
+                      <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                          </svg>
+                        </div>
+                        <div class="ml-3">
+                          <h4 class="text-sm font-medium text-blue-800 mb-1">AI Summary</h4>
+                          <p class="text-sm text-blue-700">{{ article.summary }}</p>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Meta information -->
@@ -468,6 +512,36 @@ export default {
         await this.loadStats()
       } catch (error) {
         console.error('Error toggling read status:', error)
+      }
+    },
+    
+    async toggleBookmark(article) {
+      try {
+        const response = await api.put(`/api/articles/${article.id}/bookmark`)
+        article.is_bookmarked = response.data.is_bookmarked
+      } catch (error) {
+        console.error('Error toggling bookmark:', error)
+      }
+    },
+    
+    async summarizeArticle(article) {
+      // If summary already exists, just show/hide it
+      if (article.summary) {
+        article.summary = null
+        return
+      }
+      
+      // Set loading state
+      article.summarizing = true
+      
+      try {
+        const response = await api.post(`/api/articles/${article.id}/summarize`)
+        article.summary = response.data.summary
+      } catch (error) {
+        console.error('Error generating summary:', error)
+        alert('Failed to generate summary. Please try again.')
+      } finally {
+        article.summarizing = false
       }
     },
     

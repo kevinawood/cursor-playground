@@ -7,6 +7,8 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 from dotenv import load_dotenv
+import openai
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -38,6 +40,7 @@ class Article(db.Model):
     published_date = db.Column(db.DateTime)
     author = db.Column(db.String(200))
     is_read = db.Column(db.Boolean, default=False)
+    is_bookmarked = db.Column(db.Boolean, default=False)  # New bookmark field
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship to Feed
@@ -228,6 +231,7 @@ def get_articles():
             'published_date': article.published_date.isoformat() if article.published_date else None,
             'author': article.author,
             'is_read': article.is_read,
+            'is_bookmarked': article.is_bookmarked,
             'feed_name': article.feed.name,
             'feed_category': article.feed.category,
             'feed_logo_url': article.feed.logo_url
@@ -251,6 +255,150 @@ def mark_as_unread(article_id):
     db.session.commit()
     return jsonify({'message': 'Article marked as unread'})
 
+@app.route('/api/articles/<int:article_id>/bookmark', methods=['PUT'])
+def toggle_bookmark(article_id):
+    article = Article.query.get_or_404(article_id)
+    article.is_bookmarked = not article.is_bookmarked
+    db.session.commit()
+    return jsonify({
+        'message': 'Article bookmarked' if article.is_bookmarked else 'Article unbookmarked',
+        'is_bookmarked': article.is_bookmarked
+    })
+
+@app.route('/api/articles/bookmarked', methods=['GET'])
+def get_bookmarked_articles():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    query = Article.query.filter_by(is_bookmarked=True).order_by(Article.created_at.desc())
+    
+    # Add feed information
+    articles = query.offset((page - 1) * per_page).limit(per_page).all()
+    
+    # Get total count for pagination
+    total = query.count()
+    pages = (total + per_page - 1) // per_page
+    
+    articles_data = []
+    for article in articles:
+        articles_data.append({
+            'id': article.id,
+            'title': article.title,
+            'link': article.link,
+            'description': article.description,
+            'published_date': article.published_date.isoformat() if article.published_date else None,
+            'author': article.author,
+            'is_read': article.is_read,
+            'is_bookmarked': article.is_bookmarked,
+            'feed_name': article.feed.name,
+            'feed_logo_url': article.feed.logo_url,
+            'created_at': article.created_at.isoformat()
+        })
+    
+    return jsonify({
+        'articles': articles_data,
+        'pages': pages,
+        'total': total,
+        'current_page': page
+    })
+
+@app.route('/api/articles/<int:article_id>/summarize', methods=['POST'])
+def summarize_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    
+    # Check if OpenAI API key is configured
+    openai_api_key = os.getenv('OPENAI_API_KEY')
+    if not openai_api_key:
+        return jsonify({'error': 'OpenAI API key not configured'}), 500
+    
+    try:
+        # Try to fetch the article content with headers to avoid blocking
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        }
+        
+        try:
+            response = requests.get(article.link, timeout=10, headers=headers)
+            response.raise_for_status()
+            
+            # Parse the HTML content
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+            
+            # Extract text content
+            text = soup.get_text()
+            
+            # Clean up the text
+            lines = (line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            text = ' '.join(chunk for chunk in chunks if chunk)
+            
+            # Limit text length to avoid token limits
+            if len(text) > 4000:
+                text = text[:4000] + "..."
+                
+        except requests.RequestException as e:
+            # If we can't fetch the full article, use the description as fallback
+            if article.description:
+                text = article.description
+            else:
+                return jsonify({
+                    'error': f'Unable to fetch article content. The website may be blocking requests. You can try reading the article directly: {article.link}'
+                }), 500
+        
+        # Create the prompt for summarization
+        prompt = f"""
+        Please provide a brief, engaging summary of this article's introduction and main points. 
+        Focus on what the article is about without giving away all the details.
+        Keep it under 150 words and make it compelling enough to decide if it's worth reading.
+        
+        Article title: {article.title}
+        Article content: {text}
+        """
+        
+        # Get summary from OpenAI
+        openai.api_key = openai_api_key
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that creates engaging, concise summaries of articles."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        
+        summary = response.choices[0].message.content.strip()
+        
+        return jsonify({
+            'summary': summary,
+            'article_title': article.title
+        })
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        # Check if it's a quota exceeded error
+        if "quota" in error_msg.lower() or "billing" in error_msg.lower():
+            # Provide a helpful message with fallback summary
+            fallback_summary = f"AI summary temporarily unavailable due to API quota limits. Here's a brief overview: {article.title} - {article.description[:200] if article.description else 'Click to read the full article.'}"
+            
+            return jsonify({
+                'summary': fallback_summary,
+                'article_title': article.title,
+                'note': 'This is a fallback summary due to API quota limits. Please check your OpenAI billing status.'
+            })
+        else:
+            return jsonify({'error': f'Failed to generate summary: {error_msg}'}), 500
+
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
     categories = db.session.query(Feed.category).distinct().all()
@@ -264,12 +412,14 @@ def get_stats():
         Feed.is_active == True,
         Article.is_read == False
     ).count()
+    bookmarked_articles = Article.query.filter_by(is_bookmarked=True).count()
     
     return jsonify({
         'total_feeds': total_feeds,
         'total_articles': total_articles,
         'unread_articles': unread_articles,
-        'read_articles': total_articles - unread_articles
+        'read_articles': total_articles - unread_articles,
+        'bookmarked_articles': bookmarked_articles
     })
 
 @app.route('/api/feed-search')

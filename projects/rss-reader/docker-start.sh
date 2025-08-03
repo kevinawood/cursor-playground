@@ -10,8 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Export UID and GID for Linux compatibility
-export DOCKER_UID=$(id -u)
-export DOCKER_GID=$(id -g)
+export DOCKER_UID=1001
+export DOCKER_GID=1001
 
 echo "🐳 Starting RSS Reader with Docker Compose..."
 echo "📍 Backend: http://localhost:5001"
@@ -34,6 +34,10 @@ fi
 # Stop any existing containers
 echo "🛑 Stopping any existing containers..."
 docker-compose down
+
+# Fix frontend directory permissions for Linux
+echo "🔧 Fixing frontend directory permissions..."
+sudo chown -R 1001:1001 ./frontend
 
 # Build and start the services
 echo "🔨 Building and starting services..."
