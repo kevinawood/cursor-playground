@@ -60,8 +60,8 @@
                         <a 
                           :href="article.link" 
                           target="_blank" 
-                          class="hover:underline text-indigo-600 hover:text-indigo-800"
-                          @click="openArticle(article)"
+                          class="hover:underline text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                          @click.prevent="openArticle(article)"
                         >
                           {{ article.title }}
                         </a>

@@ -277,9 +277,9 @@
                           <a 
                             :href="article.link" 
                             target="_blank" 
-                            class="hover:underline transition-colors duration-200"
+                            class="hover:underline transition-colors duration-200 cursor-pointer"
                             :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
-                            @click="openArticle(article)"
+                            @click.prevent="openArticle(article)"
                           >
                             {{ article.title }}
                           </a>
