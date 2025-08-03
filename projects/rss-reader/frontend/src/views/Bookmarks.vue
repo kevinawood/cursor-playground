@@ -1,18 +1,19 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-gray-900' : 'bg-gray-50'">
     <!-- Header -->
-    <div class="bg-white shadow-sm border-b px-4 sm:px-6 lg:px-8">
+    <div class="transition-colors duration-200 px-4 sm:px-6 lg:px-8" :class="darkMode ? 'bg-gray-800 shadow-sm border-gray-700' : 'bg-white shadow-sm border-b'">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
-          <h1 class="text-xl lg:text-2xl font-bold text-gray-900">Bookmarked Articles</h1>
-          <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <h1 class="text-xl lg:text-2xl font-bold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Bookmarked Articles</h1>
+          <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors duration-200" :class="darkMode ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800'">
             {{ stats.bookmarked_articles || 0 }}
           </span>
         </div>
         <div class="flex items-center space-x-4">
           <router-link
             to="/"
-            class="text-sm font-medium text-gray-500 hover:text-gray-700"
+            class="text-sm font-medium transition-colors duration-200"
+            :class="darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'"
           >
             ← Back to Articles
           </router-link>
@@ -26,16 +27,16 @@
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-12">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p class="mt-4 text-base text-gray-500">Loading bookmarked articles...</p>
+          <p class="mt-4 text-base transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Loading bookmarked articles...</p>
         </div>
 
         <!-- Empty State -->
         <div v-else-if="articles.length === 0" class="text-center py-12">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mx-auto h-12 w-12 transition-colors duration-200" :class="darkMode ? 'text-gray-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
           </svg>
-          <h3 class="mt-2 text-base font-medium text-gray-900">No bookmarked articles</h3>
-          <p class="mt-1 text-sm text-gray-500">Start bookmarking articles to see them here.</p>
+          <h3 class="mt-2 text-base font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">No bookmarked articles</h3>
+          <p class="mt-1 text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Start bookmarking articles to see them here.</p>
           <div class="mt-6">
             <router-link
               to="/"
@@ -47,8 +48,8 @@
         </div>
 
         <!-- Articles List -->
-        <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul class="divide-y divide-gray-200">
+        <div v-else class="transition-colors duration-200 shadow overflow-hidden sm:rounded-md" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
+          <ul class="transition-colors duration-200" :class="darkMode ? 'divide-gray-700' : 'divide-gray-200'">
             <li v-for="article in articles" :key="article.id">
               <div class="px-4 py-4 lg:px-6">
                 <div class="space-y-3">
@@ -208,6 +209,12 @@ import api from '../config/axios'
 
 export default {
   name: 'Bookmarks',
+  props: {
+    darkMode: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
       articles: [],
