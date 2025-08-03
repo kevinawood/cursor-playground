@@ -208,6 +208,7 @@
       :modal-content="hnModalContent"
       :dark-mode="darkMode"
       @close="closeHNModal"
+      @choice-made="handleHNChoice"
     />
   </div>
 </template>
@@ -395,6 +396,14 @@ export default {
     
     closeHNModal() {
       this.showHNModal = false
+    },
+    
+    async handleHNChoice(choice) {
+      // Find the article that was clicked
+      const article = this.articles.find(a => a.title === this.hnModalContent.title)
+      if (article && !article.is_read) {
+        await this.toggleReadStatus(article)
+      }
     }
   }
 }

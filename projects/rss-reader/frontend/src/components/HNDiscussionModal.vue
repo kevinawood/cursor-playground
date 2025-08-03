@@ -5,7 +5,7 @@
       <div class="fixed inset-0 transition-opacity" :class="darkMode ? 'bg-gray-900 bg-opacity-75' : 'bg-gray-500 bg-opacity-75'"></div>
 
       <!-- Modal panel -->
-      <div class="inline-block align-bottom transition-all transform bg-white rounded-lg text-left overflow-hidden shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" :class="darkMode ? 'bg-gray-800' : 'bg-white'" @click.stop>
+      <div class="inline-block align-bottom transition-all transform rounded-lg text-left overflow-hidden shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full transition-colors duration-200" :class="darkMode ? 'bg-gray-800' : 'bg-white'" @click.stop>
         <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
           <div class="sm:flex sm:items-start">
             <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -104,11 +104,13 @@ export default {
       if (url) {
         window.open(url, '_blank')
       }
+      this.$emit('choice-made', 'discussion')
       this.closeModal()
     },
     
     openArticle() {
       window.open(this.modalContent.originalUrl, '_blank')
+      this.$emit('choice-made', 'article')
       this.closeModal()
     }
   }

@@ -44,9 +44,21 @@ export function getHNDiscussionUrl(articleLink) {
 
 // Get a more reliable discussion URL by searching HN
 export function getHNDiscussionUrlBySearch(articleTitle, articleLink) {
-  // Search HN for the article title
-  const searchQuery = encodeURIComponent(articleTitle)
-  return `https://hn.algolia.com/?q=${searchQuery}`
+  // Try to extract domain from the original link for better search
+  let searchQuery = articleTitle
+  
+  try {
+    const url = new URL(articleLink)
+    const domain = url.hostname.replace('www.', '')
+    // Search for title + domain for better results
+    searchQuery = `${articleTitle} ${domain}`
+  } catch (e) {
+    // Fallback to just title if URL parsing fails
+    searchQuery = articleTitle
+  }
+  
+  const encodedQuery = encodeURIComponent(searchQuery)
+  return `https://hn.algolia.com/?q=${encodedQuery}&sort=byPopularity&prefix=false&page=0&dateRange=all&type=story`
 }
 
 // Get the best discussion URL available
