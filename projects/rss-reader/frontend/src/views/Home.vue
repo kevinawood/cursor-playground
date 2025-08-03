@@ -486,7 +486,11 @@ export default {
         discussionUrl: '',
         searchUrl: '',
         feedName: ''
-      }
+      },
+      // Reading time cache
+      readingTimeCache: new Map(),
+      // AI Summary cache
+      summaryCache: new Map()
     }
   },
   async mounted() {
@@ -583,12 +587,21 @@ export default {
         return
       }
       
+      // Check cache first
+      if (this.summaryCache.has(article.id)) {
+        article.summary = this.summaryCache.get(article.id);
+        return;
+      }
+      
       // Set loading state
       article.summarizing = true
       
       try {
         const response = await api.post(`/api/articles/${article.id}/summarize`)
         article.summary = response.data.summary
+        
+        // Cache the summary
+        this.summaryCache.set(article.id, response.data.summary);
       } catch (error) {
         console.error('Error generating summary:', error)
         alert('Failed to generate summary. Please try again.')
@@ -719,6 +732,11 @@ export default {
     },
 
     calculateReadingTime(article) {
+      // Check cache first
+      if (this.readingTimeCache.has(article.id)) {
+        return this.readingTimeCache.get(article.id);
+      }
+
       // Get text content from title and description
       const title = article.title || '';
       const description = article.description || '';
@@ -730,19 +748,19 @@ export default {
       // Calculate estimated reading time based on content length
       let estimatedWords = 0;
       
-      if (descWords > 50) {
+      if (descWords > 100) {
         // If description is substantial, use it as base
-        estimatedWords = descWords * 1.5; // Assume description is ~2/3 of full article
+        estimatedWords = descWords * 2; // Assume description is ~1/2 of full article
       } else if (titleWords > 10) {
         // If title is long, estimate based on title length
-        estimatedWords = titleWords * 15; // Long titles often indicate longer articles
+        estimatedWords = titleWords * 20; // Long titles often indicate longer articles
       } else {
         // Default estimation based on feed type and title
         const feedName = article.feed_name || '';
         if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
           estimatedWords = 800; // Tech articles tend to be longer
         } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
-          estimatedWords = 1200; // Magazine articles are typically longer
+          estimatedWords = 1500; // Magazine articles are typically longer
         } else {
           estimatedWords = 600; // Default medium length
         }
@@ -756,22 +774,34 @@ export default {
       const finalMinutes = Math.max(1, minutes);
       
       // Format the output
+      let result;
       if (finalMinutes === 1) {
-        return '1 min read';
+        result = '1 min read';
       } else if (finalMinutes < 60) {
-        return `${finalMinutes} min read`;
+        result = `${finalMinutes} min read`;
       } else {
         const hours = Math.floor(finalMinutes / 60);
         const remainingMinutes = finalMinutes % 60;
         if (remainingMinutes === 0) {
-          return `${hours}h read`;
+          result = `${hours}h read`;
         } else {
-          return `${hours}h ${remainingMinutes}m read`;
+          result = `${hours}h ${remainingMinutes}m read`;
         }
       }
+
+      // Cache the result
+      this.readingTimeCache.set(article.id, result);
+      return result;
     },
 
     getReadingTimeColor(article) {
+      // Check cache first
+      const cachedResult = this.readingTimeCache.get(article.id);
+      if (cachedResult) {
+        const minutes = this.extractMinutesFromReadingTime(cachedResult);
+        return this.getColorForMinutes(minutes);
+      }
+
       // Get text content from title and description
       const title = article.title || '';
       const description = article.description || '';
@@ -783,16 +813,16 @@ export default {
       // Calculate estimated reading time based on content length
       let estimatedWords = 0;
       
-      if (descWords > 50) {
-        estimatedWords = descWords * 1.5;
+      if (descWords > 100) {
+        estimatedWords = descWords * 2;
       } else if (titleWords > 10) {
-        estimatedWords = titleWords * 15;
+        estimatedWords = titleWords * 20;
       } else {
         const feedName = article.feed_name || '';
         if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
           estimatedWords = 800;
         } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
-          estimatedWords = 1200;
+          estimatedWords = 1500;
         } else {
           estimatedWords = 600;
         }
@@ -802,9 +832,21 @@ export default {
       const minutes = Math.ceil(estimatedWords / readingSpeed);
       const finalMinutes = Math.max(1, minutes);
 
-      // Color coding based on estimated reading time
-      if (finalMinutes <= 3) return 'bg-green-100 text-green-800';
-      if (finalMinutes <= 8) return 'bg-yellow-100 text-yellow-800';
+      return this.getColorForMinutes(finalMinutes);
+    },
+
+    extractMinutesFromReadingTime(readingTime) {
+      if (readingTime.includes('h')) {
+        const hours = parseInt(readingTime.match(/(\d+)h/)?.[1] || 0);
+        const minutes = parseInt(readingTime.match(/(\d+)m/)?.[1] || 0);
+        return hours * 60 + minutes;
+      }
+      return parseInt(readingTime.match(/(\d+)/)?.[1] || 1);
+    },
+
+    getColorForMinutes(minutes) {
+      if (minutes <= 3) return 'bg-green-100 text-green-800';
+      if (minutes <= 8) return 'bg-yellow-100 text-yellow-800';
       return 'bg-red-100 text-red-800';
     }
   }
