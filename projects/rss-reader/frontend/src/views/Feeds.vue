@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-2xl font-semibold text-gray-900">RSS Feeds</h1>
-        <p class="mt-2 text-sm text-gray-700">
+        <h1 class="text-2xl font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">RSS Feeds</h1>
+        <p class="mt-2 text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-300' : 'text-gray-700'">
           Manage your RSS feed subscriptions
         </p>
       </div>
@@ -235,6 +235,12 @@ import api from '../config/axios'
 
 export default {
   name: 'Feeds',
+  props: {
+    darkMode: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
       feeds: [],

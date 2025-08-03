@@ -1,19 +1,21 @@
 <template>
-  <div class="flex min-h-screen bg-gray-50">
+  <div class="flex min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-gray-900' : 'bg-gray-50'">
     <!-- Sidebar -->
     <div 
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 w-64 shadow-lg transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0',
+        darkMode ? 'bg-gray-800' : 'bg-white',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
       style="top: 3.5rem; height: calc(100vh - 3.5rem);"
     >
       <!-- Sidebar Header -->
-      <div class="flex items-center justify-between h-12 sm:h-16 px-4 border-b border-gray-200">
-        <h2 class="text-base sm:text-lg font-semibold text-gray-900">Subscribed Feeds</h2>
+      <div class="flex items-center justify-between h-12 sm:h-16 px-4 transition-colors duration-200" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
+        <h2 class="text-base sm:text-lg font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Subscribed Feeds</h2>
         <button
           @click="sidebarOpen = false"
-          class="lg:hidden p-1.5 sm:p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          class="lg:hidden p-1.5 sm:p-2 rounded-md transition-colors duration-200"
+          :class="darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'"
         >
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -31,7 +33,9 @@
               'w-full flex items-center px-2 sm:px-3 py-2 text-sm font-medium rounded-md mb-2 transition-colors',
               selectedFeedId === null
                 ? 'bg-indigo-100 text-indigo-700'
-                : 'text-gray-700 hover:bg-gray-100'
+                : darkMode 
+                  ? 'text-gray-300 hover:bg-gray-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
             ]"
           >
             <svg class="w-4 h-4 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,10 +51,11 @@
           </div>
 
           <div v-else-if="feeds.length === 0" class="text-center py-4">
-            <p class="text-sm text-gray-500">No feeds yet</p>
+            <p class="text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">No feeds yet</p>
             <router-link
               to="/feeds"
-              class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+              class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded transition-colors duration-200"
+              :class="darkMode ? 'text-indigo-400 bg-indigo-900 hover:bg-indigo-800' : 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'"
             >
               Add Feeds
             </router-link>
@@ -65,7 +70,9 @@
                 'w-full flex items-center px-2 sm:px-3 py-2 text-sm font-medium rounded-md transition-colors',
                 selectedFeedId === feed.id
                   ? 'bg-indigo-100 text-indigo-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  : darkMode 
+                    ? 'text-gray-300 hover:bg-gray-700' 
+                    : 'text-gray-700 hover:bg-gray-100'
               ]"
             >
               <img 
@@ -77,7 +84,7 @@
               />
               <span v-else class="w-4 h-4 mr-2 sm:mr-3 text-center flex-shrink-0">{{ getFeedIcon(feed.name) }}</span>
               <span class="truncate flex-1 text-left">{{ feed.name }}</span>
-              <span class="text-xs text-gray-500 flex-shrink-0">{{ feed.article_count }}</span>
+              <span class="text-xs transition-colors duration-200 flex-shrink-0" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">{{ feed.article_count }}</span>
             </button>
           </div>
         </div>
@@ -95,12 +102,13 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Top Bar -->
-      <div class="bg-white shadow-sm border-b px-3 sm:px-4 lg:px-8">
+      <div class="transition-colors duration-200 px-3 sm:px-4 lg:px-8" :class="darkMode ? 'bg-gray-800 shadow-sm border-gray-700' : 'bg-white shadow-sm border-b'">
         <div class="flex items-center justify-between h-12 sm:h-16">
           <!-- Mobile menu button -->
           <button
             @click="sidebarOpen = true"
-            class="lg:hidden p-1.5 sm:p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            class="lg:hidden p-1.5 sm:p-2 rounded-md transition-colors duration-200"
+            :class="darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -109,21 +117,23 @@
 
           <!-- Title and Filters -->
           <div class="flex-1 min-w-0 ml-2 lg:ml-0">
-            <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
+            <h1 class="text-lg sm:text-xl lg:text-2xl font-bold transition-colors duration-200 truncate" :class="darkMode ? 'text-white' : 'text-gray-900'">
               {{ selectedFeedId ? getSelectedFeedName() : 'All Articles' }}
             </h1>
             <!-- Mobile navigation links -->
             <div class="flex sm:hidden mt-1 space-x-4">
               <router-link
                 to="/"
-                class="text-xs font-medium text-gray-500 hover:text-gray-700"
+                class="text-xs font-medium transition-colors duration-200"
+                :class="darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'"
                 active-class="text-indigo-600"
               >
                 Articles
               </router-link>
               <router-link
                 to="/feeds"
-                class="text-xs font-medium text-gray-500 hover:text-gray-700"
+                class="text-xs font-medium transition-colors duration-200"
+                :class="darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'"
                 active-class="text-indigo-600"
               >
                 Feeds
@@ -139,7 +149,9 @@
                 'px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors',
                 showUnreadOnly
                   ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : darkMode 
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               ]"
             >
               <span class="hidden sm:inline">{{ showUnreadOnly ? 'Unread Only' : 'Show All' }}</span>
@@ -148,7 +160,8 @@
             <button
               @click="refreshFeeds"
               :disabled="refreshing"
-              class="p-1.5 sm:p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+              class="p-1.5 sm:p-2 rounded-md transition-colors duration-200 disabled:opacity-50"
+              :class="darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'"
             >
               <svg 
                 :class="['w-4 h-4 sm:w-5 sm:h-5', refreshing ? 'animate-spin' : '']" 
@@ -168,7 +181,7 @@
         <div class="px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
         <!-- Stats Cards - Hidden on mobile to save space -->
         <div class="hidden sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
             <div class="p-4 lg:p-5">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -180,15 +193,15 @@
                 </div>
                 <div class="ml-5 w-0 flex-1">
                   <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Total Articles</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.total_articles }}</dd>
+                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Total Articles</dt>
+                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.total_articles }}</dd>
                   </dl>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
             <div class="p-4 lg:p-5">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -200,15 +213,15 @@
                 </div>
                 <div class="ml-5 w-0 flex-1">
                   <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Unread</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.unread_articles }}</dd>
+                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Unread</dt>
+                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.unread_articles }}</dd>
                   </dl>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
             <div class="p-4 lg:p-5">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -220,8 +233,8 @@
                 </div>
                 <div class="ml-5 w-0 flex-1">
                   <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">Read</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.read_articles }}</dd>
+                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Read</dt>
+                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.read_articles }}</dd>
                   </dl>
                 </div>
               </div>
@@ -233,15 +246,15 @@
         <div>
           <div v-if="loading" class="text-center py-8 sm:py-12">
             <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p class="mt-4 text-sm sm:text-base text-gray-500">Loading articles...</p>
+            <p class="mt-4 text-sm sm:text-base transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Loading articles...</p>
           </div>
 
           <div v-else-if="articles.length === 0" class="text-center py-8 sm:py-12">
-            <svg class="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="mx-auto h-8 w-8 sm:h-12 sm:w-12 transition-colors duration-200" :class="darkMode ? 'text-gray-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            <h3 class="mt-2 text-sm sm:text-base font-medium text-gray-900">No articles</h3>
-            <p class="mt-1 text-xs sm:text-sm text-gray-500">Get started by adding some RSS feeds.</p>
+            <h3 class="mt-2 text-sm sm:text-base font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">No articles</h3>
+            <p class="mt-1 text-xs sm:text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Get started by adding some RSS feeds.</p>
             <div class="mt-4 sm:mt-6">
               <router-link
                 to="/feeds"
@@ -252,19 +265,20 @@
             </div>
           </div>
 
-          <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul class="divide-y divide-gray-200">
+          <div v-else class="transition-colors duration-200 shadow overflow-hidden sm:rounded-md" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
+            <ul class="transition-colors duration-200" :class="darkMode ? 'divide-gray-700' : 'divide-gray-200'">
               <li v-for="article in articles" :key="article.id">
                 <div class="px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
                   <div class="space-y-3">
                     <!-- Title and Action Buttons -->
                     <div class="flex items-start justify-between">
                       <div class="flex-1 min-w-0 pr-2">
-                        <h3 class="text-sm sm:text-base font-medium text-gray-900 leading-5 sm:leading-6">
+                        <h3 class="text-sm sm:text-base font-medium transition-colors duration-200 leading-5 sm:leading-6" :class="darkMode ? 'text-white' : 'text-gray-900'">
                           <a 
                             :href="article.link" 
                             target="_blank" 
-                            class="hover:underline text-indigo-600 hover:text-indigo-800"
+                            class="hover:underline transition-colors duration-200"
+                            :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
                             @click="openArticle(article)"
                           >
                             {{ article.title }}
@@ -316,7 +330,7 @@
                     </div>
 
                     <!-- Description -->
-                    <div v-if="article.description" class="text-sm text-gray-600 leading-5 line-clamp-3 sm:line-clamp-2">
+                    <div v-if="article.description" class="text-sm leading-5 line-clamp-3 sm:line-clamp-2 transition-colors duration-200" :class="darkMode ? 'text-gray-300' : 'text-gray-600'">
                       {{ stripHtml(article.description) }}
                     </div>
 
@@ -336,7 +350,7 @@
                     </div>
 
                     <!-- Meta information -->
-                    <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500">
+                    <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
                       <div class="flex items-center">
                         <img 
                           v-if="article.feed_logo_url" 
@@ -415,6 +429,12 @@ import api from '../config/axios'
 
 export default {
   name: 'Home',
+  props: {
+    darkMode: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
       articles: [],
