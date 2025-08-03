@@ -421,14 +421,27 @@
         </div>
       </div>
     </div>
+    
+    <!-- HN Discussion Modal -->
+    <HNDiscussionModal
+      :show="showHNModal"
+      :modal-content="hnModalContent"
+      :dark-mode="darkMode"
+      @close="closeHNModal"
+    />
   </div>
 </template>
 
 <script>
 import api from '../config/axios'
+import { isHackerNewsArticle, getHNModalContent } from '../utils/hnUtils'
+import HNDiscussionModal from '../components/HNDiscussionModal.vue'
 
 export default {
   name: 'Home',
+  components: {
+    HNDiscussionModal
+  },
   props: {
     darkMode: {
       type: Boolean,
@@ -454,7 +467,16 @@ export default {
       unreadOnly: false,
       selectedFeedId: null,
       sidebarOpen: false,
-      refreshing: false
+      refreshing: false,
+      // HN Discussion Modal
+      showHNModal: false,
+      hnModalContent: {
+        title: '',
+        originalUrl: '',
+        discussionUrl: '',
+        searchUrl: '',
+        feedName: ''
+      }
     }
   },
   async mounted() {
@@ -609,6 +631,16 @@ export default {
       if (!article.is_read) {
         await this.toggleReadStatus(article)
       }
+      
+      // Check if this is a Hacker News article
+      if (isHackerNewsArticle(article)) {
+        this.hnModalContent = getHNModalContent(article)
+        this.showHNModal = true
+        return
+      }
+      
+      // For non-HN articles, open directly
+      window.open(article.link, '_blank')
     },
     
     getFeedIcon(feedName) {
@@ -662,6 +694,10 @@ export default {
       } finally {
         this.refreshing = false
       }
+    },
+    
+    closeHNModal() {
+      this.showHNModal = false
     }
   }
 }
