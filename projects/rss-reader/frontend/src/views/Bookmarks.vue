@@ -435,80 +435,39 @@ export default {
         return this.readingTimeCache.get(article.id);
       }
 
-      // Get text content from title and description
-      const title = article.title || '';
-      const description = article.description || '';
-      
-      // Clean and count words
-      const titleWords = title.split(/\s+/).filter(word => word.length > 0).length;
-      const descWords = description.split(/\s+/).filter(word => word.length > 0).length;
-      
-      // Calculate estimated reading time based on content length
-      let estimatedWords = 0;
-      
-      if (descWords > 100) {
-        // If description is substantial, use it as base
-        estimatedWords = descWords * 2; // Assume description is ~1/2 of full article
-      } else if (titleWords > 10) {
-        // If title is long, estimate based on title length
-        estimatedWords = titleWords * 20; // Long titles often indicate longer articles
-      } else {
-        // Default estimation based on feed type and title
-        const feedName = article.feed_name || '';
-        if (feedName.includes('Hacker News') || feedName.includes('TechCrunch')) {
-          estimatedWords = 800; // Tech articles tend to be longer
-        } else if (feedName.includes('Wired') || feedName.includes('Ars Technica')) {
-          estimatedWords = 1500; // Magazine articles are typically longer
-        } else {
-          estimatedWords = 600; // Default medium length
-        }
-      }
-      
-      // Apply reading speed (200 words per minute)
-      const readingSpeed = 200;
-      const minutes = Math.ceil(estimatedWords / readingSpeed);
-      
-      // Ensure minimum of 1 minute
-      const finalMinutes = Math.max(1, minutes);
-      
-      // Format the output
-      let result;
-      if (finalMinutes === 1) {
-        result = '1 min read';
-      } else if (finalMinutes < 60) {
-        result = `${finalMinutes} min read`;
-      } else {
-        const hours = Math.floor(finalMinutes / 60);
-        const remainingMinutes = finalMinutes % 60;
-        if (remainingMinutes === 0) {
-          result = `${hours}h read`;
-        } else {
-          result = `${hours}h ${remainingMinutes}m read`;
-        }
-      }
-
-      // Cache the result
-      this.readingTimeCache.set(article.id, result);
-      return result;
+      // For now, return a loading state while we fetch the actual reading time
+      this.fetchAccurateReadingTime(article);
+      return 'Calculating...';
     },
 
-    getReadingTimeColor(article) {
-      // Check cache first
-      const cachedResult = this.readingTimeCache.get(article.id);
-      if (cachedResult) {
-        const minutes = this.extractMinutesFromReadingTime(cachedResult);
-        return this.getColorForMinutes(minutes);
+    async fetchAccurateReadingTime(article) {
+      try {
+        const response = await api.get(`/api/articles/${article.id}/reading-time`);
+        const result = response.data;
+        
+        // Cache the result
+        this.readingTimeCache.set(article.id, result.reading_time);
+        
+        // Force re-render to update the display
+        this.$forceUpdate();
+        
+      } catch (error) {
+        console.error('Error fetching reading time:', error);
+        // Fallback to estimation
+        const fallbackTime = this.calculateFallbackReadingTime(article);
+        this.readingTimeCache.set(article.id, fallbackTime);
+        this.$forceUpdate();
       }
+    },
 
-      // Get text content from title and description
+    calculateFallbackReadingTime(article) {
+      // Fallback estimation when API fails
       const title = article.title || '';
       const description = article.description || '';
       
-      // Clean and count words
       const titleWords = title.split(/\s+/).filter(word => word.length > 0).length;
       const descWords = description.split(/\s+/).filter(word => word.length > 0).length;
       
-      // Calculate estimated reading time based on content length
       let estimatedWords = 0;
       
       if (descWords > 100) {
@@ -529,8 +488,32 @@ export default {
       const readingSpeed = 200;
       const minutes = Math.ceil(estimatedWords / readingSpeed);
       const finalMinutes = Math.max(1, minutes);
+      
+      if (finalMinutes === 1) {
+        return '1 min read (estimated)';
+      } else if (finalMinutes < 60) {
+        return `${finalMinutes} min read (estimated)`;
+      } else {
+        const hours = Math.floor(finalMinutes / 60);
+        const remainingMinutes = finalMinutes % 60;
+        if (remainingMinutes === 0) {
+          return `${hours}h read (estimated)`;
+        } else {
+          return `${hours}h ${remainingMinutes}m read (estimated)`;
+        }
+      }
+    },
 
-      return this.getColorForMinutes(finalMinutes);
+    getReadingTimeColor(article) {
+      // Check cache first
+      const cachedResult = this.readingTimeCache.get(article.id);
+      if (cachedResult) {
+        const minutes = this.extractMinutesFromReadingTime(cachedResult);
+        return this.getColorForMinutes(minutes);
+      }
+
+      // Default color for "Calculating..." state
+      return 'bg-gray-100 text-gray-800';
     },
 
     extractMinutesFromReadingTime(readingTime) {
