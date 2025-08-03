@@ -1,17 +1,17 @@
 <template>
   <div class="flex min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-gray-900' : 'bg-gray-50'">
-    <!-- Sidebar -->
+    <!-- Sidebar - Made narrower and more to the left -->
     <div 
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-64 shadow-lg transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 w-56 shadow-lg transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0',
         darkMode ? 'bg-gray-800' : 'bg-white',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
       style="top: 3.5rem; height: calc(100vh - 3.5rem);"
     >
       <!-- Sidebar Header -->
-      <div class="flex items-center justify-between h-12 sm:h-16 px-4 transition-colors duration-200" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
-        <h2 class="text-base sm:text-lg font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Subscribed Feeds</h2>
+      <div class="flex items-center justify-between h-12 sm:h-16 px-3 transition-colors duration-200" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
+        <h2 class="text-sm sm:text-base font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Subscribed Feeds</h2>
         <button
           @click="sidebarOpen = false"
           class="lg:hidden p-1.5 sm:p-2 rounded-md transition-colors duration-200"
@@ -25,7 +25,7 @@
 
       <!-- Sidebar Content -->
       <div class="flex-1 overflow-y-auto">
-        <div class="p-3 sm:p-4">
+        <div class="p-2 sm:p-3">
           <!-- All Feeds Option -->
           <button
             @click="selectFeed(null)"
@@ -99,10 +99,10 @@
       style="top: 3.5rem;"
     ></div>
 
-    <!-- Main Content -->
+    <!-- Main Content - Made wider to use more screen real estate -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Top Bar -->
-      <div class="transition-colors duration-200 px-3 sm:px-4 lg:px-8" :class="darkMode ? 'bg-gray-800 shadow-sm border-gray-700' : 'bg-white shadow-sm border-b'">
+      <div class="transition-colors duration-200 px-3 sm:px-4 lg:px-6" :class="darkMode ? 'bg-gray-800 shadow-sm border-gray-700' : 'bg-white shadow-sm border-b'">
         <div class="flex items-center justify-between h-12 sm:h-16">
           <!-- Mobile menu button -->
           <button
@@ -176,9 +176,9 @@
         </div>
       </div>
 
-      <!-- Content Area -->
+      <!-- Content Area - Made wider -->
       <div class="flex-1 overflow-y-auto">
-        <div class="px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
+        <div class="px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         <!-- Stats Cards - Hidden on mobile to save space -->
         <div class="hidden sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
@@ -268,11 +268,11 @@
           <div v-else class="transition-colors duration-200 shadow overflow-hidden sm:rounded-md" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
             <ul class="transition-colors duration-200" :class="darkMode ? 'divide-gray-700' : 'divide-gray-200'">
               <li v-for="article in articles" :key="article.id">
-                <div class="px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
+                <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
                   <div class="space-y-3">
                     <!-- Title and Action Buttons -->
                     <div class="flex items-start justify-between">
-                      <div class="flex-1 min-w-0 pr-2">
+                      <div class="flex-1 min-w-0 pr-3">
                         <h3 class="text-sm sm:text-base font-medium transition-colors duration-200 leading-5 sm:leading-6" :class="darkMode ? 'text-white' : 'text-gray-900'">
                           <a 
                             :href="article.link" 
@@ -349,7 +349,7 @@
                       </div>
                     </div>
 
-                    <!-- Meta information -->
+                    <!-- Meta information - Added reading time -->
                     <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
                       <div class="flex items-center">
                         <img 
@@ -364,6 +364,15 @@
                       </div>
                       <span class="text-gray-400">•</span>
                       <span>{{ formatTimeAgo(article.published_date) }}</span>
+                      <span class="text-gray-400">•</span>
+                      <!-- Reading Time Badge -->
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-200" 
+                            :class="getReadingTimeColor(article)">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        {{ calculateReadingTime(article) }}
+                      </span>
                       <span v-if="article.author" class="text-gray-400">•</span>
                       <span v-if="article.author" class="truncate">{{ article.author }}</span>
                     </div>
@@ -707,6 +716,25 @@ export default {
       if (article && !article.is_read) {
         await this.toggleReadStatus(article)
       }
+    },
+
+    calculateReadingTime(article) {
+      const text = article.description || article.title;
+      const words = text.split(/\s+/).filter(word => word.length > 0);
+      const readingSpeed = 200; // Words per minute
+      const minutes = Math.ceil(words.length / readingSpeed);
+      return `${minutes} min read`;
+    },
+
+    getReadingTimeColor(article) {
+      const text = article.description || article.title;
+      const words = text.split(/\s+/).filter(word => word.length > 0);
+      const readingSpeed = 200; // Words per minute
+      const minutes = Math.ceil(words.length / readingSpeed);
+
+      if (minutes < 1) return 'bg-green-100 text-green-800';
+      if (minutes < 5) return 'bg-yellow-100 text-yellow-800';
+      return 'bg-red-100 text-red-800';
     }
   }
 }
