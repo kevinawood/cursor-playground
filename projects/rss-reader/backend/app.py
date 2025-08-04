@@ -43,6 +43,7 @@ class Article(db.Model):
     author = db.Column(db.String(200))
     is_read = db.Column(db.Boolean, default=False)
     is_bookmarked = db.Column(db.Boolean, default=False)  # New bookmark field
+    image_url = db.Column(db.String(1000))  # Store article image URL
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship to Feed
@@ -73,6 +74,63 @@ def extract_feed_logo(parsed_feed, feed_url):
             pass
     
     return logo_url
+
+def extract_article_image(entry, article_url):
+    """Extract image URL from RSS article entry"""
+    image_url = None
+    
+    # Try multiple sources for article images
+    sources = [
+        # Media content (most common)
+        entry.get('media_content', [{}])[0].get('url') if entry.get('media_content') else None,
+        entry.get('media_thumbnail', [{}])[0].get('url') if entry.get('media_thumbnail') else None,
+        
+        # Enclosures (audio/video/image files)
+        entry.get('enclosures', [{}])[0].get('href') if entry.get('enclosures') else None,
+        
+        # Links with image type
+        next((link.get('href') for link in entry.get('links', []) 
+              if link.get('type', '').startswith('image/')), None),
+        
+        # Open Graph meta tags (extracted from description)
+        None,  # Will be handled by BeautifulSoup parsing
+        
+        # First img tag in content/description
+        None   # Will be handled by BeautifulSoup parsing
+    ]
+    
+    # Try each source
+    for source in sources:
+        if source and source.startswith('http'):
+            image_url = source
+            break
+    
+    # If no direct image found, try to extract from content/description
+    if not image_url and (entry.get('content') or entry.get('summary')):
+        try:
+            content = entry.get('content', [{}])[0].get('value', '') or entry.get('summary', '')
+            if content:
+                soup = BeautifulSoup(content, 'html.parser')
+                img_tag = soup.find('img')
+                if img_tag and img_tag.get('src'):
+                    src = img_tag.get('src')
+                    if src.startswith('http'):
+                        image_url = src
+                    elif src.startswith('//'):
+                        image_url = f"https:{src}"
+                    elif src.startswith('/'):
+                        # Relative URL - try to make it absolute
+                        try:
+                            from urllib.parse import urlparse, urljoin
+                            parsed_url = urlparse(article_url)
+                            base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                            image_url = urljoin(base_url, src)
+                        except:
+                            pass
+        except Exception as e:
+            print(f"Error extracting image from content: {str(e)}")
+    
+    return image_url
 
 def fetch_feed_articles(feed_id):
     """Fetch articles from a specific feed with memory optimization"""
@@ -106,6 +164,9 @@ def fetch_feed_articles(feed_id):
                     if len(title) > 500:
                         title = title[:497] + "..."
                     
+                    # Extract article image
+                    image_url = extract_article_image(entry, entry.get('link', ''))
+                    
                     # Create new article
                     article = Article(
                         feed_id=feed.id,
@@ -113,7 +174,8 @@ def fetch_feed_articles(feed_id):
                         link=entry.get('link', ''),
                         description=entry.get('summary', ''),
                         published_date=published_date,
-                        author=entry.get('author', '')
+                        author=entry.get('author', ''),
+                        image_url=image_url
                     )
                     db.session.add(article)
                     new_articles_count += 1
@@ -271,6 +333,7 @@ def get_articles():
             'author': article.author,
             'is_read': article.is_read,
             'is_bookmarked': article.is_bookmarked,
+            'image_url': article.image_url,
             'feed_name': article.feed.name,
             'feed_category': article.feed.category,
             'feed_logo_url': article.feed.logo_url
@@ -304,6 +367,34 @@ def toggle_bookmark(article_id):
         'is_bookmarked': article.is_bookmarked
     })
 
+@app.route('/api/articles/mark-all-read', methods=['POST'])
+def mark_all_as_read():
+    """Mark all articles as read, optionally filtered by feed_id"""
+    data = request.json or {}
+    feed_id = data.get('feed_id')
+    
+    query = Article.query.join(Feed).filter(Feed.is_active == True, Article.is_read == False)
+    
+    if feed_id:
+        query = query.filter(Article.feed_id == feed_id)
+        feed = Feed.query.get(feed_id)
+        feed_name = feed.name if feed else f"Feed {feed_id}"
+    else:
+        feed_name = "All Feeds"
+    
+    # Get count before updating
+    count = query.count()
+    
+    # Update all matching articles
+    query.update({Article.is_read: True}, synchronize_session=False)
+    db.session.commit()
+    
+    return jsonify({
+        'message': f'Marked {count} articles as read in {feed_name}',
+        'count': count,
+        'feed_name': feed_name
+    })
+
 @app.route('/api/articles/bookmarked', methods=['GET'])
 def get_bookmarked_articles():
     page = request.args.get('page', 1, type=int)
@@ -329,6 +420,7 @@ def get_bookmarked_articles():
             'author': article.author,
             'is_read': article.is_read,
             'is_bookmarked': article.is_bookmarked,
+            'image_url': article.image_url,
             'feed_name': article.feed.name,
             'feed_logo_url': article.feed.logo_url,
             'created_at': article.created_at.isoformat()

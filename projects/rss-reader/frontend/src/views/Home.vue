@@ -253,6 +253,27 @@
 
         <!-- Articles list -->
         <div>
+          <!-- Mark All as Read Button -->
+          <div v-if="articles.length > 0 && stats.unread_articles > 0" class="mb-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <button
+                @click="markAllAsRead"
+                :disabled="markingAllAsRead"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md transition-colors duration-200"
+                :class="darkMode ? 'text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600' : 'text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400'"
+              >
+                <svg v-if="markingAllAsRead" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                {{ markingAllAsRead ? 'Marking...' : `Mark All as Read (${stats.unread_articles})` }}
+              </button>
+            </div>
+          </div>
+
           <div v-if="loading" class="text-center py-8 sm:py-12">
             <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-indigo-600 mx-auto"></div>
             <p class="mt-4 text-sm sm:text-base transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Loading articles...</p>
@@ -279,21 +300,35 @@
               <li v-for="article in articles" :key="article.id">
                 <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
                   <div class="space-y-3">
-                    <!-- Title and Action Buttons -->
-                    <div class="flex items-start justify-between">
-                      <div class="flex-1 min-w-0 pr-3">
-                        <h3 class="text-sm sm:text-base font-medium transition-colors duration-200 leading-5 sm:leading-6" :class="darkMode ? 'text-white' : 'text-gray-900'">
-                          <a 
-                            :href="article.link" 
-                            target="_blank" 
-                            class="hover:underline transition-colors duration-200 cursor-pointer"
-                            :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
-                            @click="openArticle(article, $event)"
-                          >
-                            {{ article.title }}
-                          </a>
-                        </h3>
+                    <!-- Article Content with Image -->
+                    <div class="flex space-x-4">
+                      <!-- Article Image -->
+                      <div v-if="article.image_url" class="flex-shrink-0">
+                        <img 
+                          :src="article.image_url" 
+                          :alt="article.title"
+                          class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg shadow-sm"
+                          @error="handleArticleImageError"
+                        />
                       </div>
+                      
+                      <!-- Article Content -->
+                      <div class="flex-1 min-w-0">
+                        <!-- Title and Action Buttons -->
+                        <div class="flex items-start justify-between">
+                          <div class="flex-1 min-w-0 pr-3">
+                            <h3 class="text-sm sm:text-base font-medium transition-colors duration-200 leading-5 sm:leading-6" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                              <a 
+                                :href="article.link" 
+                                target="_blank" 
+                                class="hover:underline transition-colors duration-200 cursor-pointer"
+                                :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
+                                @click="openArticle(article, $event)"
+                              >
+                                {{ article.title }}
+                              </a>
+                            </h3>
+                          </div>
                       <div class="flex-shrink-0 flex items-center space-x-1">
                         <!-- Summarize Button -->
                         <button
@@ -436,7 +471,6 @@
             </div>
           </div>
         </div>
-        </div>
       </div>
     </div>
     
@@ -487,6 +521,7 @@ export default {
       selectedFeedId: null,
       sidebarOpen: false,
       refreshing: false,
+      markingAllAsRead: false,
       // HN Discussion Modal
       showHNModal: false,
       hnModalContent: {
@@ -857,6 +892,37 @@ export default {
       console.log('Clearing reading time cache...');
       this.readingTimeCache.clear();
       console.log('Reading time cache cleared.');
+    },
+
+    async markAllAsRead() {
+      this.markingAllAsRead = true
+      try {
+        const payload = this.selectedFeedId ? { feed_id: this.selectedFeedId } : {}
+        const response = await api.post('/api/articles/mark-all-read', payload)
+        
+        // Update all articles to be marked as read
+        this.articles.forEach(article => {
+          if (!this.selectedFeedId || article.feed_id === this.selectedFeedId) {
+            article.is_read = true
+          }
+        })
+        
+        // Reload stats to update counts
+        await this.loadStats()
+        
+        // Show success message
+        console.log(response.data.message)
+      } catch (error) {
+        console.error('Error marking all as read:', error)
+        alert('Failed to mark all articles as read. Please try again.')
+      } finally {
+        this.markingAllAsRead = false
+      }
+    },
+
+    handleArticleImageError(event) {
+      // Hide the image if it fails to load
+      event.target.style.display = 'none'
     }
   }
 }
