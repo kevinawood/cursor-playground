@@ -3,14 +3,14 @@
     <!-- Sidebar - Made narrower and more to the left -->
     <div 
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-56 shadow-lg transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 w-56 shadow-lg transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col',
         darkMode ? 'bg-gray-800' : 'bg-white',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
       style="top: 3.5rem; height: calc(100vh - 3.5rem);"
     >
       <!-- Sidebar Header -->
-      <div class="flex items-center justify-between h-12 sm:h-16 px-3 transition-colors duration-200" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
+      <div class="flex items-center justify-between h-12 sm:h-16 px-3 transition-colors duration-200 border-b" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
         <h2 class="text-sm sm:text-base font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Subscribed Feeds</h2>
         <button
           @click="sidebarOpen = false"
@@ -23,8 +23,8 @@
         </button>
       </div>
 
-      <!-- Sidebar Content -->
-      <div class="flex-1 overflow-y-auto">
+      <!-- Sidebar Content - Scrollable area -->
+      <div class="flex-1 overflow-y-auto min-h-0">
         <div class="p-2 sm:p-3">
           <!-- All Feeds Option -->
           <button

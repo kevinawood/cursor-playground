@@ -10,19 +10,23 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies as root first
-RUN npm ci
-
-# Change ownership of node_modules to nextjs user
-RUN chown -R nextjs:nodejs /app/node_modules
-
-# Copy application code
-COPY . .
-
-# Change ownership of the entire app directory
+# Change ownership of package files to nextjs user
 RUN chown -R nextjs:nodejs /app
 
-# Switch to nextjs user
+# Switch to nextjs user for npm operations
+USER nextjs
+
+# Install dependencies as nextjs user
+RUN npm ci
+
+# Copy application code (as root temporarily)
+USER root
+COPY . .
+
+# Change ownership of the entire app directory to nextjs user
+RUN chown -R nextjs:nodejs /app
+
+# Switch back to nextjs user
 USER nextjs
 
 # Expose port
