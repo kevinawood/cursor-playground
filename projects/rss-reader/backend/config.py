@@ -7,8 +7,8 @@ class Config:
     # Database
     DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/rss_reader')
     
-    # Feed refresh settings
-    FEED_REFRESH_INTERVAL_MINUTES = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', '15'))
+    # Feed refresh settings (30 minutes default for egress optimization)
+    FEED_REFRESH_INTERVAL_MINUTES = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', '30'))
     
     # Memory optimization settings
     BATCH_SIZE_FOR_FEED_PROCESSING = int(os.getenv('BATCH_SIZE_FOR_FEED_PROCESSING', '10'))
