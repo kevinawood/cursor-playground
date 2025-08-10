@@ -34,9 +34,9 @@ USER appuser
 # Expose port
 EXPOSE 5001
 
-# Health check
+# Health check (respect dynamic $PORT in Railway; default to 5001 locally)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5001/api/stats || exit 1
+    CMD sh -c 'curl -f http://localhost:${PORT:-5001}/api/stats || exit 1'
 
 # Run the application with Gunicorn for production
 CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "1", "--threads", "2", "--timeout", "30", "--max-requests", "100", "--max-requests-jitter", "10", "wsgi:app"] 
