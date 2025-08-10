@@ -323,13 +323,13 @@ def summarize_article(article_id):
         }
         
         try:
-            # Reduced timeout for Railway
-            response = requests.get(article.link, timeout=5, headers=headers)
+            # Reduced timeout for Railway and egress optimization
+            response = requests.get(article.link, timeout=3, headers=headers)  # Reduced from 5 to 3 seconds
             response.raise_for_status()
             
-            # Check content size to prevent memory issues
+            # Check content size to prevent memory issues and reduce egress
             content_length = len(response.content)
-            if content_length > 1024 * 1024:  # 1MB limit
+            if content_length > 512 * 1024:  # Reduced from 1MB to 512KB for egress optimization
                 raise Exception("Article content too large for processing")
             
             # Parse the HTML content
@@ -347,9 +347,9 @@ def summarize_article(article_id):
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             text = ' '.join(chunk for chunk in chunks if chunk)
             
-            # Limit text length to avoid token limits and memory issues
-            if len(text) > 3000:  # Reduced from 4000 to 3000
-                text = text[:3000] + "..."
+            # Limit text length to avoid token limits and memory issues, and reduce egress
+            if len(text) > 2000:  # Reduced from 3000 to 2000 for egress optimization
+                text = text[:2000] + "..."
             
             # Clear memory
             del soup, response
@@ -357,7 +357,7 @@ def summarize_article(article_id):
         except requests.RequestException as e:
             # If we can't fetch the full article, use the description as fallback
             if article.description:
-                text = article.description[:1000]  # Limit description too
+                text = article.description[:500]  # Reduced from 1000 to 500 for egress optimization
             else:
                 return jsonify({
                     'error': f'Unable to fetch article content. The website may be blocking requests. You can try reading the article directly: {article.link}'
@@ -366,7 +366,7 @@ def summarize_article(article_id):
             # Handle memory or other errors gracefully
             if "memory" in str(e).lower() or "out of memory" in str(e).lower():
                 # Use description as fallback
-                text = article.description[:1000] if article.description else article.title
+                text = article.description[:500] if article.description else article.title  # Reduced from 1000 to 500
             else:
                 raise e
         
@@ -380,7 +380,7 @@ def summarize_article(article_id):
         Article content: {text}
         """
         
-        # Get summary from OpenAI with reduced tokens
+        # Get summary from OpenAI with reduced tokens for egress optimization
         openai.api_key = openai_api_key
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -388,7 +388,7 @@ def summarize_article(article_id):
                 {"role": "system", "content": "You are a helpful assistant that creates engaging, concise summaries of articles."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=150,  # Reduced from 200 to 150
+            max_tokens=100,  # Reduced from 150 to 100 for egress optimization
             temperature=0.7
         )
         
@@ -429,8 +429,11 @@ def summarize_article(article_id):
 
 @app.route('/api/articles/<int:article_id>/reading-time', methods=['GET'])
 def get_article_reading_time(article_id):
-    """Get accurate reading time by scraping article content with memory optimization"""
+    """Get accurate reading time by scraping article content with memory and egress optimization"""
     article = Article.query.get_or_404(article_id)
+    
+    # Check if we have a cached reading time in the database
+    # (You could add a reading_time field to the Article model for permanent caching)
     
     try:
         # Use the same headers as the summarize endpoint
@@ -443,13 +446,13 @@ def get_article_reading_time(article_id):
             'Upgrade-Insecure-Requests': '1',
         }
         
-        # Reduced timeout for Railway
-        response = requests.get(article.link, timeout=5, headers=headers)
+        # Reduced timeout for Railway and egress optimization
+        response = requests.get(article.link, timeout=3, headers=headers)  # Reduced from 5 to 3 seconds
         response.raise_for_status()
         
-        # Check content size to prevent memory issues
+        # Check content size to prevent memory issues and reduce egress
         content_length = len(response.content)
-        if content_length > 1024 * 1024:  # 1MB limit
+        if content_length > 512 * 1024:  # Reduced from 1MB to 512KB for egress optimization
             raise Exception("Article content too large for processing")
         
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -482,16 +485,16 @@ def get_article_reading_time(article_id):
                 largest_element = max(elements, key=lambda x: len(x.get_text()))
                 content_text = largest_element.get_text()
                 
-                # Limit content size to prevent memory issues
-                if len(content_text) > 50000:  # 50KB limit
-                    content_text = content_text[:50000]
+                # Limit content size to prevent memory issues and reduce egress
+                if len(content_text) > 25000:  # Reduced from 50KB to 25KB for egress optimization
+                    content_text = content_text[:25000]
                 break
         
         # If no specific content found, use body text with limits
         if not content_text:
             content_text = soup.get_text()
-            if len(content_text) > 50000:  # 50KB limit
-                content_text = content_text[:50000]
+            if len(content_text) > 25000:  # Reduced from 50KB to 25KB for egress optimization
+                content_text = content_text[:25000]
         
         # Clean the text efficiently
         lines = (line.strip() for line in content_text.splitlines())
@@ -500,7 +503,7 @@ def get_article_reading_time(article_id):
         
         # Count words with limit
         words = text.split()
-        word_count = min(len(words), 10000)  # Cap at 10,000 words
+        word_count = min(len(words), 5000)  # Reduced from 10,000 to 5,000 for egress optimization
         
         # Calculate reading time (200 words per minute)
         reading_speed = 200
@@ -636,8 +639,8 @@ def manual_refresh_feeds():
     refresh_all_feeds()
     return jsonify({'message': 'Feeds refreshed successfully'})
 
-# Schedule feed refresh every 5 minutes
-scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=5)
+# Schedule feed refresh every 30 minutes (reduced from 5 minutes to save egress)
+scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=30)
 
 if __name__ == '__main__':
     with app.app_context():
