@@ -323,36 +323,52 @@ def summarize_article(article_id):
         }
         
         try:
-            response = requests.get(article.link, timeout=10, headers=headers)
+            # Reduced timeout for Railway
+            response = requests.get(article.link, timeout=5, headers=headers)
             response.raise_for_status()
+            
+            # Check content size to prevent memory issues
+            content_length = len(response.content)
+            if content_length > 1024 * 1024:  # 1MB limit
+                raise Exception("Article content too large for processing")
             
             # Parse the HTML content
             soup = BeautifulSoup(response.content, 'html.parser')
             
-            # Remove script and style elements
-            for script in soup(["script", "style"]):
+            # Remove script and style elements to reduce memory usage
+            for script in soup(["script", "style", "nav", "header", "footer", "aside", "iframe", "embed"]):
                 script.decompose()
             
-            # Extract text content
+            # Extract text content with size limits
             text = soup.get_text()
             
-            # Clean up the text
+            # Clean up the text efficiently
             lines = (line.strip() for line in text.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             text = ' '.join(chunk for chunk in chunks if chunk)
             
-            # Limit text length to avoid token limits
-            if len(text) > 4000:
-                text = text[:4000] + "..."
+            # Limit text length to avoid token limits and memory issues
+            if len(text) > 3000:  # Reduced from 4000 to 3000
+                text = text[:3000] + "..."
+            
+            # Clear memory
+            del soup, response
                 
         except requests.RequestException as e:
             # If we can't fetch the full article, use the description as fallback
             if article.description:
-                text = article.description
+                text = article.description[:1000]  # Limit description too
             else:
                 return jsonify({
                     'error': f'Unable to fetch article content. The website may be blocking requests. You can try reading the article directly: {article.link}'
                 }), 500
+        except Exception as e:
+            # Handle memory or other errors gracefully
+            if "memory" in str(e).lower() or "out of memory" in str(e).lower():
+                # Use description as fallback
+                text = article.description[:1000] if article.description else article.title
+            else:
+                raise e
         
         # Create the prompt for summarization
         prompt = f"""
@@ -364,7 +380,7 @@ def summarize_article(article_id):
         Article content: {text}
         """
         
-        # Get summary from OpenAI
+        # Get summary from OpenAI with reduced tokens
         openai.api_key = openai_api_key
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -372,11 +388,14 @@ def summarize_article(article_id):
                 {"role": "system", "content": "You are a helpful assistant that creates engaging, concise summaries of articles."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=200,
+            max_tokens=150,  # Reduced from 200 to 150
             temperature=0.7
         )
         
         summary = response.choices[0].message.content.strip()
+        
+        # Clear memory
+        del text, prompt, response
         
         return jsonify({
             'summary': summary,
@@ -396,12 +415,21 @@ def summarize_article(article_id):
                 'article_title': article.title,
                 'note': 'This is a fallback summary due to API quota limits. Please check your OpenAI billing status.'
             })
+        elif "memory" in error_msg.lower() or "out of memory" in error_msg.lower():
+            # Handle memory errors gracefully
+            fallback_summary = f"Summary temporarily unavailable due to system limits. Here's a brief overview: {article.title} - {article.description[:200] if article.description else 'Click to read the full article.'}"
+            
+            return jsonify({
+                'summary': fallback_summary,
+                'article_title': article.title,
+                'note': 'This is a fallback summary due to system memory limits.'
+            })
         else:
             return jsonify({'error': f'Failed to generate summary: {error_msg}'}), 500
 
 @app.route('/api/articles/<int:article_id>/reading-time', methods=['GET'])
 def get_article_reading_time(article_id):
-    """Get accurate reading time by scraping article content"""
+    """Get accurate reading time by scraping article content with memory optimization"""
     article = Article.query.get_or_404(article_id)
     
     try:
@@ -415,17 +443,22 @@ def get_article_reading_time(article_id):
             'Upgrade-Insecure-Requests': '1',
         }
         
-        response = requests.get(article.link, timeout=10, headers=headers)
+        # Reduced timeout for Railway
+        response = requests.get(article.link, timeout=5, headers=headers)
         response.raise_for_status()
+        
+        # Check content size to prevent memory issues
+        content_length = len(response.content)
+        if content_length > 1024 * 1024:  # 1MB limit
+            raise Exception("Article content too large for processing")
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Remove script and style elements
-        for script in soup(["script", "style", "nav", "header", "footer", "aside"]):
+        # Remove script and style elements to reduce memory usage
+        for script in soup(["script", "style", "nav", "header", "footer", "aside", "iframe", "embed"]):
             script.decompose()
         
-        # Try to find the main article content
-        # Common selectors for article content
+        # Try to find the main article content with memory-efficient approach
         content_selectors = [
             'article',
             '[class*="article"]',
@@ -441,27 +474,33 @@ def get_article_reading_time(article_id):
         
         content_text = ""
         
-        # Try each selector
+        # Try each selector with size limits
         for selector in content_selectors:
             elements = soup.select(selector)
             if elements:
                 # Get text from the largest element (likely the main content)
                 largest_element = max(elements, key=lambda x: len(x.get_text()))
                 content_text = largest_element.get_text()
+                
+                # Limit content size to prevent memory issues
+                if len(content_text) > 50000:  # 50KB limit
+                    content_text = content_text[:50000]
                 break
         
-        # If no specific content found, use body text
+        # If no specific content found, use body text with limits
         if not content_text:
             content_text = soup.get_text()
+            if len(content_text) > 50000:  # 50KB limit
+                content_text = content_text[:50000]
         
-        # Clean the text
+        # Clean the text efficiently
         lines = (line.strip() for line in content_text.splitlines())
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         text = ' '.join(chunk for chunk in chunks if chunk)
         
-        # Count words
+        # Count words with limit
         words = text.split()
-        word_count = len(words)
+        word_count = min(len(words), 10000)  # Cap at 10,000 words
         
         # Calculate reading time (200 words per minute)
         reading_speed = 200
@@ -477,6 +516,9 @@ def get_article_reading_time(article_id):
                 reading_time = f"{hours}h read"
             else:
                 reading_time = f"{hours}h {remaining_minutes}m read"
+        
+        # Clear memory
+        del soup, response, content_text, text, words
         
         return jsonify({
             'reading_time': reading_time,
@@ -498,7 +540,18 @@ def get_article_reading_time(article_id):
             'note': 'Using fallback estimation - could not fetch article content'
         })
     except Exception as e:
-        return jsonify({'error': f'Failed to calculate reading time: {str(e)}'}), 500
+        # Enhanced error handling for memory issues
+        error_msg = str(e)
+        if "memory" in error_msg.lower() or "out of memory" in error_msg.lower():
+            return jsonify({
+                'reading_time': '5 min read (estimated)',
+                'word_count': 1000,
+                'minutes': 5,
+                'url': article.link,
+                'note': 'Memory limit reached - using conservative estimate'
+            }), 200  # Return 200 instead of 500 to prevent frontend errors
+        
+        return jsonify({'error': f'Failed to calculate reading time: {error_msg}'}), 500
 
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
