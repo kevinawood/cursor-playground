@@ -14,9 +14,8 @@
 # OLD: Every 5 minutes (hardcoded)
 scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=5)
 
-# NEW: Configurable interval (default 30 minutes)
-feed_refresh_interval = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', 30))
-scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refresh_interval)
+# NEW: Configurable interval using Config class (default 30 minutes)
+scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=Config.FEED_REFRESH_INTERVAL_MINUTES)
 ```
 
 **Impact:**
@@ -41,9 +40,8 @@ scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refre
 
 ### **1. RSS Refresh Frequency Reduction**
 ```python
-# Configurable refresh interval with default 30 minutes
-feed_refresh_interval = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', 30))
-scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refresh_interval)
+# Configurable refresh interval using Config class (default 30 minutes)
+scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=Config.FEED_REFRESH_INTERVAL_MINUTES)
 ```
 
 **Benefits:**
