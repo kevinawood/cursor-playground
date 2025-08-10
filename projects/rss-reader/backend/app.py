@@ -15,7 +15,17 @@ from config import Config
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS for production
+allowed_origins = [
+    'http://localhost:3000',  # Local development
+    'http://localhost:5173',  # Vite dev server
+    'https://rss-reader-lake-omega.vercel.app',  # Your Vercel frontend
+    'https://rss-reader-frontend.vercel.app',    # Alternative Vercel domain
+    'https://*.vercel.app',   # Any Vercel subdomain
+]
+
+CORS(app, origins=allowed_origins, supports_credentials=True)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.DATABASE_URL
@@ -595,6 +605,15 @@ def get_article_reading_time(article_id):
         
         return jsonify({'error': f'Failed to calculate reading time: {error_msg}'}), 500
 
+# Health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'database': 'connected' if db.engine.pool.checkedin() > 0 else 'disconnected'
+    })
+
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
     categories = db.session.query(Feed.category).distinct().all()
@@ -682,7 +701,19 @@ def manual_refresh_feeds():
 scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=Config.FEED_REFRESH_INTERVAL_MINUTES)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    port = int(os.environ.get('PORT', 5001))
-    app.run(debug=True, host='0.0.0.0', port=port) 
+    try:
+        with app.app_context():
+            db.create_all()
+            print("✅ Database tables created successfully")
+        
+        port = int(os.environ.get('PORT', 5001))
+        print(f"🚀 Starting Flask app on port {port}")
+        print(f"📊 Environment: {os.environ.get('FLASK_ENV', 'development')}")
+        print(f"🔗 Database: {Config.DATABASE_URL[:50]}...")
+        
+        app.run(debug=Config.DEBUG, host='0.0.0.0', port=port)
+    except Exception as e:
+        print(f"❌ Failed to start application: {e}")
+        import traceback
+        traceback.print_exc()
+        exit(1) 
