@@ -11,17 +11,19 @@
 
 #### **1. RSS Refresh Every 5 Minutes (MAJOR ISSUE!)**
 ```python
-# OLD: Every 5 minutes
+# OLD: Every 5 minutes (hardcoded)
 scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=5)
 
-# NEW: Every 30 minutes (6x reduction!)
-scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=30)
+# NEW: Configurable interval (default 30 minutes)
+feed_refresh_interval = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', 30))
+scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refresh_interval)
 ```
 
 **Impact:**
 - **Before**: 288 database operations per hour (24 feeds × 12 times/hour)
-- **After**: 48 database operations per hour (24 feeds × 2 times/hour)
+- **After**: 48 database operations per hour (24 feeds × 2 times/hour) with default setting
 - **Savings**: ~83% reduction in RSS-related egress!
+- **Configurable**: Can be adjusted via environment variable
 
 #### **2. Large Web Scraping Operations**
 - **Reading time calculations**: Scraping full article content
@@ -39,14 +41,16 @@ scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=30)
 
 ### **1. RSS Refresh Frequency Reduction**
 ```python
-# Reduced from every 5 minutes to every 30 minutes
-scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=30)
+# Configurable refresh interval with default 30 minutes
+feed_refresh_interval = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', 30))
+scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refresh_interval)
 ```
 
 **Benefits:**
-- ✅ **83% reduction** in RSS-related database operations
+- ✅ **83% reduction** in RSS-related database operations (with default 30-minute setting)
 - ✅ **Lower egress usage** from feed fetching
 - ✅ **Still fresh content** (30 minutes is reasonable for RSS)
+- ✅ **Configurable** - can be adjusted via environment variable
 
 ### **2. Content Size Limits**
 ```python
@@ -174,8 +178,11 @@ articles = Article.query.with_entities(
 
 #### **1. Disable RSS Refresh Temporarily**
 ```python
-# Comment out the scheduler line
-# scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=30)
+# Option 1: Comment out the scheduler line
+# scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refresh_interval)
+
+# Option 2: Set very long interval via environment variable
+# FEED_REFRESH_INTERVAL_MINUTES=1440  # 24 hours
 ```
 
 #### **2. Disable Web Scraping Features**
@@ -199,7 +206,20 @@ def get_article_reading_time(article_id):
 
 ## 🔄 Implementation Steps
 
-### **Step 1: Deploy Current Optimizations**
+### **Step 1: Configure Environment Variables**
+Add to your `.env` file or Railway environment variables:
+```bash
+# RSS feed refresh interval in minutes (default: 30)
+FEED_REFRESH_INTERVAL_MINUTES=30
+
+# For more aggressive egress reduction, use 60 minutes
+# FEED_REFRESH_INTERVAL_MINUTES=60
+
+# For more frequent updates (if you have egress room), use 15 minutes
+# FEED_REFRESH_INTERVAL_MINUTES=15
+```
+
+### **Step 2: Deploy Current Optimizations**
 ```bash
 git add .
 git commit -m "fix: optimize egress usage for Supabase 5GB limit"

@@ -639,8 +639,9 @@ def manual_refresh_feeds():
     refresh_all_feeds()
     return jsonify({'message': 'Feeds refreshed successfully'})
 
-# Schedule feed refresh every 30 minutes (reduced from 5 minutes to save egress)
-scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=30)
+# Schedule feed refresh with configurable interval (default 30 minutes for egress optimization)
+feed_refresh_interval = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', 30))
+scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refresh_interval)
 
 if __name__ == '__main__':
     with app.app_context():
