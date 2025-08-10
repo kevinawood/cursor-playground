@@ -9,6 +9,8 @@ import os
 from dotenv import load_dotenv
 import openai
 from bs4 import BeautifulSoup
+import gc
+from config import Config
 
 load_dotenv()
 
@@ -16,8 +18,8 @@ app = Flask(__name__)
 CORS(app)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost/rss_reader')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = Config.DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
 db = SQLAlchemy(app)
 
 # Models
@@ -73,44 +75,56 @@ def extract_feed_logo(parsed_feed, feed_url):
     return logo_url
 
 def fetch_feed_articles(feed_id):
-    """Fetch articles from a specific feed"""
+    """Fetch articles from a specific feed with memory optimization"""
     feed = Feed.query.get(feed_id)
     if not feed or not feed.is_active:
         return
     
     try:
         parsed_feed = feedparser.parse(feed.url)
+        new_articles_count = 0
         
-        for entry in parsed_feed.entries:
-            # Check if article already exists
-            existing = Article.query.filter_by(
-                feed_id=feed.id,
-                link=entry.get('link', '')
-            ).first()
-            
-            if not existing:
-                # Parse published date
-                published_date = None
-                if 'published_parsed' in entry:
-                    published_date = datetime(*entry.published_parsed[:6])
-                elif 'updated_parsed' in entry:
-                    published_date = datetime(*entry.updated_parsed[:6])
-                
-                # Truncate article title if it's too long (database limit is 500 characters)
-                title = entry.get('title', 'No Title')
-                if len(title) > 500:
-                    title = title[:497] + "..."
-                
-                # Create new article
-                article = Article(
+        # Process entries in smaller batches to reduce memory usage
+        for i, entry in enumerate(parsed_feed.entries):
+            try:
+                # Check if article already exists
+                existing = Article.query.filter_by(
                     feed_id=feed.id,
-                    title=title,
-                    link=entry.get('link', ''),
-                    description=entry.get('summary', ''),
-                    published_date=published_date,
-                    author=entry.get('author', '')
-                )
-                db.session.add(article)
+                    link=entry.get('link', '')
+                ).first()
+                
+                if not existing:
+                    # Parse published date
+                    published_date = None
+                    if 'published_parsed' in entry:
+                        published_date = datetime(*entry.published_parsed[:6])
+                    elif 'updated_parsed' in entry:
+                        published_date = datetime(*entry.updated_parsed[:6])
+                    
+                    # Truncate article title if it's too long (database limit is 500 characters)
+                    title = entry.get('title', 'No Title')
+                    if len(title) > 500:
+                        title = title[:497] + "..."
+                    
+                    # Create new article
+                    article = Article(
+                        feed_id=feed.id,
+                        title=title,
+                        link=entry.get('link', ''),
+                        description=entry.get('summary', ''),
+                        published_date=published_date,
+                        author=entry.get('author', '')
+                    )
+                    db.session.add(article)
+                    new_articles_count += 1
+                
+                # Commit every N articles to prevent memory buildup
+                if new_articles_count > 0 and new_articles_count % Config.COMMIT_EVERY_N_ARTICLES == 0:
+                    db.session.commit()
+                    
+            except Exception as e:
+                print(f"Error processing entry {i} in feed {feed.name}: {str(e)}")
+                continue
         
         # Extract and store logo if not already set
         if not feed.logo_url:
@@ -121,19 +135,44 @@ def fetch_feed_articles(feed_id):
         feed.last_fetched = datetime.utcnow()
         db.session.commit()
         
+        if new_articles_count > 0:
+            print(f"📰 Added {new_articles_count} new articles from {feed.name}")
+        
     except Exception as e:
         print(f"Error fetching feed {feed.name}: {str(e)}")
+        db.session.rollback()
 
 def refresh_all_feeds():
-    """Refresh all active feeds"""
+    """Refresh all active feeds with memory optimization"""
     with app.app_context():
         print(f"🔄 Starting scheduled feed refresh at {datetime.utcnow()}")
-        feeds = Feed.query.filter_by(is_active=True).all()
-        print(f"📰 Found {len(feeds)} active feeds to refresh")
+        
+        # Use yield_per to process feeds in batches to reduce memory usage
+        feeds = Feed.query.filter_by(is_active=True).yield_per(Config.BATCH_SIZE_FOR_FEED_PROCESSING)
+        feed_count = 0
+        
         for feed in feeds:
-            print(f"🔄 Refreshing feed: {feed.name}")
-            fetch_feed_articles(feed.id)
-        print(f"✅ Feed refresh completed at {datetime.utcnow()}")
+            try:
+                print(f"🔄 Refreshing feed: {feed.name}")
+                fetch_feed_articles(feed.id)
+                feed_count += 1
+                
+                # Commit after each feed to prevent memory buildup
+                db.session.commit()
+                
+                # Clear session to free memory
+                db.session.remove()
+                
+            except Exception as e:
+                print(f"❌ Error refreshing feed {feed.name}: {str(e)}")
+                db.session.rollback()
+                db.session.remove()
+                continue
+        
+        print(f"✅ Feed refresh completed at {datetime.utcnow()}. Processed {feed_count} feeds.")
+        
+        # Force garbage collection to free memory
+        gc.collect()
 
 # Routes
 @app.route('/api/feeds', methods=['GET'])
@@ -596,7 +635,7 @@ def feed_search():
         else:
             search_url = f"https://feedsearch.dev/api/v1/search?url={query}"
         
-        resp = requests.get(search_url, timeout=15)
+        resp = requests.get(search_url, timeout=Config.FEEDSEARCH_TIMEOUT)
         
         if resp.status_code == 200:
             data = resp.json()
@@ -616,7 +655,7 @@ def feed_search():
             # Bad request - try with https:// prefix
             if not query.startswith('http'):
                 search_url = f"https://feedsearch.dev/api/v1/search?url=https://{query}"
-                resp = requests.get(search_url, timeout=15)
+                resp = requests.get(search_url, timeout=Config.FEEDSEARCH_TIMEOUT)
                 if resp.status_code == 200:
                     data = resp.json()
                     for feed in data:
@@ -639,9 +678,8 @@ def manual_refresh_feeds():
     refresh_all_feeds()
     return jsonify({'message': 'Feeds refreshed successfully'})
 
-# Schedule feed refresh with configurable interval (default 30 minutes for egress optimization)
-feed_refresh_interval = int(os.getenv('FEED_REFRESH_INTERVAL_MINUTES', 30))
-scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=feed_refresh_interval)
+# Schedule feed refresh using configuration (default 30 minutes for egress optimization)
+scheduler.add_job(func=refresh_all_feeds, trigger="interval", minutes=Config.FEED_REFRESH_INTERVAL_MINUTES)
 
 if __name__ == '__main__':
     with app.app_context():
