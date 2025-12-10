@@ -1,9 +1,14 @@
 import os
 import gc
-from app import app
+from app import app, db
 
 # Memory optimization settings
 gc.set_threshold(700, 10, 10)  # More aggressive garbage collection
+
+# Initialize database tables on startup (only creates if they don't exist)
+with app.app_context():
+    db.create_all()
+    print("✅ Database tables initialized")
 
 # Set environment variables for production
 os.environ['FLASK_ENV'] = 'production'

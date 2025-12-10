@@ -9,9 +9,22 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Change to the project directory
 cd "$SCRIPT_DIR"
 
-# Export current user's UID and GID for Linux compatibility
-export DOCKER_UID=$(id -u)
-export DOCKER_GID=$(id -g)
+# Detect OS and set up environment accordingly
+OS_TYPE="$(uname -s)"
+if [ "$OS_TYPE" = "Linux" ]; then
+    echo "🐧 Detected Linux - setting up UID/GID for volume permissions..."
+    export DOCKER_UID=$(id -u)
+    export DOCKER_GID=$(id -g)
+    # Fix frontend directory permissions on Linux
+    if [ -d "./frontend" ]; then
+        sudo chown -R $DOCKER_UID:$DOCKER_GID ./frontend 2>/dev/null || true
+    fi
+else
+    echo "🍎 Detected macOS/other - Docker Desktop handles permissions automatically"
+    # Set empty values so docker-compose doesn't fail
+    export DOCKER_UID=""
+    export DOCKER_GID=""
+fi
 
 echo "🐳 Starting RSS Reader with Docker Compose..."
 echo "📍 Backend: http://localhost:5001"
@@ -35,13 +48,14 @@ fi
 echo "🛑 Stopping any existing containers..."
 docker-compose down
 
-# Fix frontend directory permissions for Linux
-echo "🔧 Fixing frontend directory permissions..."
-sudo chown -R $DOCKER_UID:$DOCKER_GID ./frontend
-
 # Build and start the services
 echo "🔨 Building and starting services..."
-docker-compose up --build -d
+if [ "$OS_TYPE" = "Linux" ]; then
+    # Use Linux override file for proper UID/GID mapping
+    docker-compose -f docker-compose.yml -f docker-compose.linux.yml up --build -d
+else
+    docker-compose up --build -d
+fi
 
 # Wait for services to be ready
 echo "⏳ Waiting for services to be ready..."

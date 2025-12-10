@@ -44,7 +44,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: rss-reader-frontend
-    user: "${DOCKER_UID}:${DOCKER_GID}"
+    # Note: Removed user directive - not needed on macOS, causes permission issues with Vite
     environment:
       VITE_API_URL: http://localhost:5001
     volumes:

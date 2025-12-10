@@ -1,0 +1,8 @@
+# Docker Compose override for Linux
+# This file adds user UID/GID mapping for proper volume permissions on Linux
+# Used automatically by docker-start.sh when running on Linux
+
+services:
+  frontend:
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+
