@@ -89,6 +89,22 @@
         <p class="mt-4 text-gray-500">Loading feeds...</p>
       </div>
 
+      <div v-else-if="loadError" class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">Error loading feeds</h3>
+        <p class="mt-1 text-sm text-gray-500">There was a problem loading your feeds. Please try again.</p>
+        <div class="mt-6">
+          <button
+            @click="retryLoadFeeds"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+
       <div v-else-if="feeds.length === 0" class="text-center py-12">
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
@@ -245,6 +261,9 @@ export default {
     return {
       feeds: [],
       loading: true,
+      loadError: false,
+      retryCount: 0,
+      maxRetries: 3,
       showAddModal: false,
       adding: false,
       newFeed: {
@@ -264,16 +283,39 @@ export default {
     await this.loadFeeds()
   },
   methods: {
-    async loadFeeds() {
-      this.loading = true
+    async loadFeeds(isRetry = false) {
+      if (!isRetry) {
+        this.loading = true
+        this.loadError = false
+        this.retryCount = 0
+      }
+      
       try {
         const response = await api.get('/api/feeds')
         this.feeds = response.data
+        this.loadError = false
+        this.retryCount = 0
       } catch (error) {
         console.error('Error loading feeds:', error)
+        
+        // Auto-retry on failure (handles race conditions with backend scheduler)
+        if (this.retryCount < this.maxRetries) {
+          this.retryCount++
+          console.log(`Retrying feed load (attempt ${this.retryCount}/${this.maxRetries})...`)
+          // Exponential backoff: 500ms, 1000ms, 2000ms
+          await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, this.retryCount - 1)))
+          return this.loadFeeds(true)
+        }
+        
+        this.loadError = true
       } finally {
         this.loading = false
       }
+    },
+    
+    async retryLoadFeeds() {
+      this.retryCount = 0
+      await this.loadFeeds()
     },
 
     async searchFeeds() {

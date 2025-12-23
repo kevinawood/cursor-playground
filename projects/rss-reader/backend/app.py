@@ -157,12 +157,18 @@ def refresh_all_feeds():
     with app.app_context():
         print(f"🔄 Starting scheduled feed refresh at {datetime.utcnow()}")
         
-        # Use yield_per to process feeds in batches to reduce memory usage
-        feeds = Feed.query.filter_by(is_active=True).yield_per(Config.BATCH_SIZE_FOR_FEED_PROCESSING)
+        # Get all feed IDs first to avoid session issues during iteration
+        # This prevents race conditions with concurrent API requests
+        feed_ids = [f.id for f in Feed.query.filter_by(is_active=True).all()]
         feed_count = 0
         
-        for feed in feeds:
+        for feed_id in feed_ids:
             try:
+                # Re-fetch the feed in each iteration to ensure fresh session state
+                feed = Feed.query.get(feed_id)
+                if not feed or not feed.is_active:
+                    continue
+                    
                 print(f"🔄 Refreshing feed: {feed.name}")
                 fetch_feed_articles(feed.id)
                 feed_count += 1
@@ -170,13 +176,12 @@ def refresh_all_feeds():
                 # Commit after each feed to prevent memory buildup
                 db.session.commit()
                 
-                # Clear session to free memory
-                db.session.remove()
+                # Expire all objects to free memory without breaking concurrent sessions
+                db.session.expire_all()
                 
             except Exception as e:
-                print(f"❌ Error refreshing feed {feed.name}: {str(e)}")
+                print(f"❌ Error refreshing feed {feed.name if feed else feed_id}: {str(e)}")
                 db.session.rollback()
-                db.session.remove()
                 continue
         
         print(f"✅ Feed refresh completed at {datetime.utcnow()}. Processed {feed_count} feeds.")

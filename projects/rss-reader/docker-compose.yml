@@ -26,7 +26,8 @@ services:
       dockerfile: Dockerfile
     container_name: rss-reader-backend
     env_file:
-      - ./backend/.env
+      - path: ./backend/.env
+        required: false  # Optional: allows CI to run without .env file
     environment:
       FLASK_ENV: development
       FLASK_DEBUG: 1
