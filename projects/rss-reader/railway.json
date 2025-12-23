@@ -5,9 +5,9 @@
     "dockerfilePath": "backend/Dockerfile"
   },
   "deploy": {
-    "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 30 --max-requests 100 --max-requests-jitter 10 wsgi:app",
-    "healthcheckPath": "/api/stats",
-    "healthcheckTimeout": 10,
+    "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 60 --max-requests 100 --max-requests-jitter 10 wsgi:app",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   },

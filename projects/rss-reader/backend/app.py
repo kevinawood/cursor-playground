@@ -610,13 +610,12 @@ def get_article_reading_time(article_id):
         
         return jsonify({'error': f'Failed to calculate reading time: {error_msg}'}), 500
 
-# Health check endpoint
+# Health check endpoint - simple and fast for Railway health checks
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({
         'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
-        'database': 'connected' if db.engine.pool.checkedin() > 0 else 'disconnected'
+        'timestamp': datetime.utcnow().isoformat()
     })
 
 @app.route('/api/categories', methods=['GET'])
