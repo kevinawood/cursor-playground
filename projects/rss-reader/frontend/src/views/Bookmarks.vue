@@ -1,212 +1,172 @@
 <template>
-  <div class="min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-gray-900' : 'bg-gray-50'">
+  <div class="min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-[#111111]' : 'bg-white'">
     <!-- Header -->
-    <div class="transition-colors duration-200 px-4 sm:px-6 lg:px-6" :class="darkMode ? 'bg-gray-800 shadow-sm border-gray-700' : 'bg-white shadow-sm border-b'">
-      <div class="flex items-center justify-between h-16">
-        <div class="flex items-center">
-          <h1 class="text-xl lg:text-2xl font-bold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Bookmarked Articles</h1>
-          <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors duration-200" :class="darkMode ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800'">
+    <div class="rounded-xl border p-6 mb-6" :class="darkMode ? 'bg-[#1a1a1a] border-[#262626]' : 'bg-white border-gray-200'">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <h1 class="text-xl font-semibold" :class="darkMode ? 'text-white' : 'text-gray-900'">Bookmarked Articles</h1>
+          <span class="px-2 py-0.5 text-xs font-medium rounded-md"
+                :class="darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'">
             {{ stats.bookmarked_articles || 0 }}
           </span>
         </div>
-        <div class="flex items-center space-x-4">
-          <router-link
-            to="/"
-            class="text-sm font-medium transition-colors duration-200"
-            :class="darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'"
-          >
-            ← Back to Articles
-          </router-link>
-        </div>
+        <router-link
+          to="/"
+          class="text-sm font-medium transition-colors"
+          :class="darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'"
+        >
+          ← Back to Articles
+        </router-link>
       </div>
     </div>
 
-    <!-- Content - Made wider to use more screen real estate -->
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-6">
-      <div class="px-4 sm:px-0">
-        <!-- Loading State -->
-        <div v-if="loading" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p class="mt-4 text-base transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Loading bookmarked articles...</p>
+    <!-- Content -->
+    <div>
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent mx-auto"></div>
+        <p class="mt-4 text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Loading bookmarked articles...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="articles.length === 0" class="text-center py-12">
+        <svg class="mx-auto h-10 w-10" :class="darkMode ? 'text-gray-600' : 'text-gray-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+        </svg>
+        <h3 class="mt-3 text-sm font-medium" :class="darkMode ? 'text-white' : 'text-gray-900'">No bookmarked articles</h3>
+        <p class="mt-1 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Start bookmarking articles to see them here.</p>
+        <div class="mt-4">
+          <router-link
+            to="/"
+            class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors inline-block"
+          >
+            Browse Articles
+          </router-link>
         </div>
+      </div>
 
-        <!-- Empty State -->
-        <div v-else-if="articles.length === 0" class="text-center py-12">
-          <svg class="mx-auto h-12 w-12 transition-colors duration-200" :class="darkMode ? 'text-gray-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-          </svg>
-          <h3 class="mt-2 text-base font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">No bookmarked articles</h3>
-          <p class="mt-1 text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Start bookmarking articles to see them here.</p>
-          <div class="mt-6">
-            <router-link
-              to="/"
-              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Browse Articles
-            </router-link>
-          </div>
-        </div>
-
-        <!-- Articles List -->
-        <div v-else class="transition-colors duration-200 shadow overflow-hidden sm:rounded-md" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-          <ul class="transition-colors duration-200" :class="darkMode ? 'divide-gray-700' : 'divide-gray-200'">
-            <li v-for="article in articles" :key="article.id">
-              <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-                <div class="space-y-3">
-                  <!-- Title and Action Buttons -->
-                  <div class="flex items-start justify-between">
-                    <div class="flex-1 min-w-0 pr-3">
-                      <h3 class="text-base font-medium text-gray-900 leading-6 transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">
-                        <a 
-                          :href="article.link" 
-                          target="_blank" 
-                          class="hover:underline text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors duration-200"
-                          :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
-                          @click="openArticle(article, $event)"
-                        >
-                          {{ article.title }}
-                        </a>
-                      </h3>
-                    </div>
-                    <div class="flex-shrink-0 flex items-center space-x-1">
-                      <!-- Summarize Button -->
-                      <button
-                        @click="summarizeArticle(article)"
-                        :disabled="article.summarizing"
-                        class="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50"
-                        :title="article.summary ? 'View Summary' : 'Generate Summary'"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                      </button>
-                      
-                      <!-- Bookmark Button -->
-                      <button
-                        @click="toggleBookmark(article)"
-                        :class="[
-                          'p-1.5 rounded-md transition-colors',
-                          article.is_bookmarked
-                            ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50'
-                            : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50'
-                        ]"
-                        :title="article.is_bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'"
-                      >
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                        </svg>
-                      </button>
-                      
-                      <!-- Read Status Button -->
-                      <button
-                        @click="toggleReadStatus(article)"
-                        :class="[
-                          'px-2 py-1 text-xs font-medium rounded-full border',
-                          article.is_read
-                            ? 'bg-gray-50 text-gray-700 border-gray-200'
-                            : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                        ]"
-                      >
-                        {{ article.is_read ? 'Read' : 'Unread' }}
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Description -->
-                  <div v-if="article.description" class="text-sm text-gray-600 leading-5 line-clamp-3 transition-colors duration-200" :class="darkMode ? 'text-gray-300' : 'text-gray-600'">
-                    {{ stripHtml(article.description) }}
-                  </div>
-
-                  <!-- AI Summary -->
-                  <div v-if="article.summary" class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
-                    <div class="flex items-start">
-                      <div class="flex-shrink-0">
-                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                      </div>
-                      <div class="ml-3">
-                        <h4 class="text-sm font-medium text-blue-800 mb-1">AI Summary</h4>
-                        <p class="text-sm text-blue-700">{{ article.summary }}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Meta information - Added reading time -->
-                  <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
-                    <div class="flex items-center">
-                      <img 
-                        v-if="article.feed_logo_url" 
-                        :src="article.feed_logo_url" 
-                        :alt="article.feed_name"
-                        class="w-4 h-4 mr-1.5 rounded-sm flex-shrink-0"
-                        @error="handleImageError"
-                      />
-                      <span v-else class="mr-1.5 flex-shrink-0">{{ getFeedIcon(article.feed_name) }}</span>
-                      <span class="font-medium">{{ article.feed_name }}</span>
-                    </div>
-                    <span class="text-gray-400">•</span>
-                    <span>{{ formatTimeAgo(article.published_date) }}</span>
-                    <span class="text-gray-400">•</span>
-                    <!-- Reading Time Badge -->
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-200" 
-                          :class="getReadingTimeColor(article)">
-                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                      {{ calculateReadingTime(article) }}
-                    </span>
-                    <span v-if="article.author" class="text-gray-400">•</span>
-                    <span v-if="article.author" class="truncate">{{ article.author }}</span>
-                  </div>
-                </div>
+      <!-- Articles List -->
+      <div v-else class="divide-y" :class="darkMode ? 'divide-[#262626]' : 'divide-gray-100'">
+        <article v-for="article in articles" :key="article.id" class="py-5 first:pt-0">
+          <div class="space-y-3">
+            <!-- Title and Action Buttons -->
+            <div class="flex items-start justify-between gap-4">
+              <h3 class="flex-1 text-base font-medium leading-snug" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                <a 
+                  :href="article.link" 
+                  target="_blank" 
+                  class="hover:text-blue-600 transition-colors cursor-pointer"
+                  @click="openArticle(article, $event)"
+                >
+                  {{ article.title }}
+                </a>
+              </h3>
+              <div class="flex-shrink-0 flex items-center space-x-1">
+                <button
+                  @click="summarizeArticle(article)"
+                  :disabled="article.summarizing"
+                  class="p-1.5 rounded-md transition-colors"
+                  :class="darkMode ? 'text-gray-500 hover:text-blue-400 hover:bg-blue-500/10' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'"
+                  :title="article.summary ? 'View Summary' : 'Generate Summary'"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </button>
+                <button
+                  @click="toggleBookmark(article)"
+                  class="p-1.5 rounded-md transition-colors"
+                  :class="article.is_bookmarked
+                    ? 'text-yellow-500 hover:text-yellow-600'
+                    : darkMode ? 'text-gray-500 hover:text-yellow-400' : 'text-gray-400 hover:text-yellow-500'"
+                  :title="article.is_bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'"
+                >
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                  </svg>
+                </button>
+                <button
+                  @click="toggleReadStatus(article)"
+                  class="px-2 py-1 text-xs font-medium rounded-md transition-colors"
+                  :class="article.is_read
+                    ? darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'
+                    : 'bg-blue-100 text-blue-700'"
+                >
+                  {{ article.is_read ? 'Read' : 'Unread' }}
+                </button>
               </div>
-            </li>
-          </ul>
-        </div>
+            </div>
 
-        <!-- Pagination -->
-        <div v-if="totalPages > 1" class="mt-6 flex items-center justify-between">
-          <div class="flex-1 flex justify-between sm:hidden">
+            <!-- Description -->
+            <p v-if="article.description" class="text-sm leading-relaxed line-clamp-2" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
+              {{ stripHtml(article.description) }}
+            </p>
+
+            <!-- AI Summary -->
+            <div v-if="article.summary" class="p-3 rounded-lg" :class="darkMode ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50'">
+              <p class="text-sm" :class="darkMode ? 'text-blue-300' : 'text-blue-700'">{{ article.summary }}</p>
+            </div>
+
+            <!-- Meta information -->
+            <div class="flex flex-wrap items-center gap-2 text-xs" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">
+              <span class="font-medium" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">{{ article.feed_name }}</span>
+              <span>•</span>
+              <span>{{ formatTimeAgo(article.published_date) }}</span>
+              <span>•</span>
+              <span class="inline-flex items-center">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                {{ calculateReadingTime(article) }}
+              </span>
+              <span v-if="article.author">•</span>
+              <span v-if="article.author">{{ article.author }}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="mt-8 flex items-center justify-between">
+        <div class="flex-1 flex justify-between sm:hidden">
+          <button
+            @click="changePage(currentPage - 1)"
+            :disabled="currentPage === 1"
+            class="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+            :class="darkMode ? 'bg-[#1a1a1a] text-gray-300 border border-[#262626]' : 'bg-white text-gray-700 border border-gray-200'"
+          >
+            Previous
+          </button>
+          <button
+            @click="changePage(currentPage + 1)"
+            :disabled="currentPage === totalPages"
+            class="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+            :class="darkMode ? 'bg-[#1a1a1a] text-gray-300 border border-[#262626]' : 'bg-white text-gray-700 border border-gray-200'"
+          >
+            Next
+          </button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <p class="text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
+            Page <span class="font-medium" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ currentPage }}</span> of <span class="font-medium" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ totalPages }}</span>
+          </p>
+          <div class="flex gap-2">
             <button
               @click="changePage(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              :class="darkMode ? 'bg-[#1a1a1a] text-gray-300 border border-[#262626] hover:bg-[#222]' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'"
             >
               Previous
             </button>
             <button
               @click="changePage(currentPage + 1)"
               :disabled="currentPage === totalPages"
-              class="ml-3 relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              :class="darkMode ? 'bg-[#1a1a1a] text-gray-300 border border-[#262626] hover:bg-[#222]' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'"
             >
               Next
             </button>
-          </div>
-          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p class="text-sm text-gray-700">
-                Showing page <span class="font-medium">{{ currentPage }}</span> of <span class="font-medium">{{ totalPages }}</span>
-              </p>
-            </div>
-            <div>
-              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                <button
-                  @click="changePage(currentPage - 1)"
-                  :disabled="currentPage === 1"
-                  class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <button
-                  @click="changePage(currentPage + 1)"
-                  :disabled="currentPage === totalPages"
-                  class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </nav>
-            </div>
           </div>
         </div>
       </div>
@@ -506,43 +466,16 @@ export default {
           return `${hours}h ${remainingMinutes}m read (estimated)`;
         }
       }
-    },
-
-    getReadingTimeColor(article) {
-      // Check cache first
-      const cachedResult = this.readingTimeCache.get(article.id);
-      if (cachedResult) {
-        const minutes = this.extractMinutesFromReadingTime(cachedResult);
-        return this.getColorForMinutes(minutes);
-      }
-
-      // Default color for "Calculating..." state
-      return 'bg-gray-100 text-gray-800';
-    },
-
-    extractMinutesFromReadingTime(readingTime) {
-      if (readingTime.includes('h')) {
-        const hours = parseInt(readingTime.match(/(\d+)h/)?.[1] || 0);
-        const minutes = parseInt(readingTime.match(/(\d+)m/)?.[1] || 0);
-        return hours * 60 + minutes;
-      }
-      return parseInt(readingTime.match(/(\d+)/)?.[1] || 1);
-    },
-
-    getColorForMinutes(minutes) {
-      if (minutes <= 3) return 'bg-green-100 text-green-800';
-      if (minutes <= 8) return 'bg-yellow-100 text-yellow-800';
-      return 'bg-red-100 text-red-800';
     }
   }
 }
 </script>
 
 <style scoped>
-.line-clamp-3 {
+.line-clamp-2 {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-</style> 
+</style>
