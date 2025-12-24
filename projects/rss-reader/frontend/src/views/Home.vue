@@ -1,9 +1,9 @@
 <template>
   <div class="flex min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-[#111111]' : 'bg-white'">
     <!-- Sidebar - Minimal Clean Style -->
-    <div 
+    <div
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-60 transform transition-all duration-200 lg:relative lg:translate-x-0 flex flex-col border-r',
+        'fixed inset-y-0 left-0 z-10 w-60 transform transition-all duration-200 lg:relative lg:translate-x-0 flex flex-col border-r',
         darkMode ? 'bg-[#111111] border-[#262626]' : 'bg-white border-gray-200',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
@@ -100,7 +100,7 @@
     ></div>
 
     <!-- Main Content - Made wider to use more screen real estate -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden" style="min-width: 60em;">
       <!-- Top Bar -->
       <div class="transition-colors duration-200 px-3 sm:px-4 lg:px-6 border-b" :class="darkMode ? 'bg-[#111111] border-[#262626]' : 'bg-white border-gray-200'">
         <div class="flex items-center justify-between h-12 sm:h-16">
