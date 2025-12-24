@@ -1,24 +1,24 @@
 <template>
-  <div class="flex min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-gray-900' : 'bg-gray-50'">
-    <!-- Sidebar - Made narrower and more to the left -->
+  <div class="flex min-h-screen transition-colors duration-300" :class="darkMode ? 'bg-[#0f0f0f]' : 'bg-[#fafafa]'">
+    <!-- Sidebar - Modern Editorial Style -->
     <div 
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-56 shadow-lg transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col',
-        darkMode ? 'bg-gray-800' : 'bg-white',
+        'fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-out lg:relative lg:translate-x-0 flex flex-col',
+        darkMode ? 'bg-[#1a1a1a] border-r border-white/10' : 'bg-white border-r border-black/5',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
-      style="top: 3.5rem; height: calc(100vh - 3.5rem);"
+      style="top: 5rem; height: calc(100vh - 5rem);"
     >
       <!-- Sidebar Header -->
-      <div class="flex items-center justify-between h-12 sm:h-16 px-3 transition-colors duration-200 border-b" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
-        <h2 class="text-sm sm:text-base font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Subscribed Feeds</h2>
+      <div class="flex items-center justify-between h-14 px-5 transition-colors duration-200 border-b" :class="darkMode ? 'border-white/10' : 'border-black/5'">
+        <h2 class="text-sm font-semibold uppercase tracking-wider transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Subscribed Feeds</h2>
         <button
           @click="sidebarOpen = false"
-          class="lg:hidden p-1.5 sm:p-2 rounded-md transition-colors duration-200"
-          :class="darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'"
+          class="lg:hidden p-2 rounded-lg transition-colors duration-200"
+          :class="darkMode ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 hover:bg-black/5'"
         >
-          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
@@ -188,63 +188,57 @@
       <!-- Content Area - Made wider -->
       <div class="flex-1 overflow-y-auto">
         <div class="px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
-        <!-- Stats Cards - Hidden on mobile to save space -->
-        <div class="hidden sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <div class="p-4 lg:p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </div>
+        <!-- Stats Cards - Modern Editorial Style -->
+        <div class="hidden sm:grid sm:grid-cols-3 gap-6 mb-10">
+          <div class="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1" 
+               :class="darkMode ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-white hover:shadow-xl'">
+            <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="relative p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider mb-1" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Total Articles</p>
+                  <p class="text-3xl font-bold editorial-title" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.total_articles.toLocaleString() }}</p>
                 </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Total Articles</dt>
-                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.total_articles }}</dd>
-                  </dl>
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                  </svg>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <div class="p-4 lg:p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </div>
+          <div class="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1" 
+               :class="darkMode ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-white hover:shadow-xl'">
+            <div class="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="relative p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider mb-1" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Unread</p>
+                  <p class="text-3xl font-bold editorial-title" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.unread_articles.toLocaleString() }}</p>
                 </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Unread</dt>
-                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.unread_articles }}</dd>
-                  </dl>
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <div class="p-4 lg:p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </div>
+          <div class="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1" 
+               :class="darkMode ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-white hover:shadow-xl'">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="relative p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider mb-1" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Read</p>
+                  <p class="text-3xl font-bold editorial-title" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.read_articles.toLocaleString() }}</p>
                 </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Read</dt>
-                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.read_articles }}</dd>
-                  </dl>
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
                 </div>
               </div>
             </div>
@@ -274,26 +268,27 @@
             </div>
           </div>
 
-          <div v-else class="transition-colors duration-200 shadow overflow-hidden sm:rounded-md" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <ul class="transition-colors duration-200" :class="darkMode ? 'divide-gray-700' : 'divide-gray-200'">
-              <li v-for="article in articles" :key="article.id">
-                <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-                  <div class="space-y-3">
-                    <!-- Title and Action Buttons -->
-                    <div class="flex items-start justify-between">
-                      <div class="flex-1 min-w-0 pr-3">
-                        <h3 class="text-sm sm:text-base font-medium transition-colors duration-200 leading-5 sm:leading-6" :class="darkMode ? 'text-white' : 'text-gray-900'">
-                          <a 
-                            :href="article.link" 
-                            target="_blank" 
-                            class="hover:underline transition-colors duration-200 cursor-pointer"
-                            :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
-                            @click="openArticle(article, $event)"
-                          >
-                            {{ article.title }}
-                          </a>
-                        </h3>
-                      </div>
+          <div v-else class="space-y-4">
+            <article v-for="article in articles" :key="article.id" 
+                     class="group relative rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
+                     :class="darkMode ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-white hover:shadow-xl'">
+              <div class="p-6">
+                <div class="space-y-4">
+                  <!-- Title and Action Buttons -->
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                      <h3 class="text-lg sm:text-xl font-semibold leading-snug editorial-title transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                        <a 
+                          :href="article.link" 
+                          target="_blank" 
+                          class="hover:text-indigo-600 transition-colors duration-200 cursor-pointer accent-underline"
+                          :class="darkMode ? 'text-white hover:text-indigo-400' : 'text-gray-900 hover:text-indigo-600'"
+                          @click="openArticle(article, $event)"
+                        >
+                          {{ article.title }}
+                        </a>
+                      </h3>
+                    </div>
                       <div class="flex-shrink-0 flex items-center space-x-1">
                         <!-- Summarize Button -->
                         <button
@@ -387,8 +382,8 @@
                     </div>
                   </div>
                 </div>
-              </li>
-            </ul>
+              </div>
+            </article>
           </div>
 
           <!-- Pagination -->

@@ -2,33 +2,166 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+/* Modern Editorial Design System */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #4f46e5;
+  --color-primary-dark: #4338ca;
+  --color-accent: #8b5cf6;
+  --color-bg-light: #fafafa;
+  --color-bg-dark: #0f0f0f;
+  --color-card-light: #ffffff;
+  --color-card-dark: #1a1a1a;
 }
 
-/* Mobile optimizations */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Editorial Typography */
+.editorial-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.editorial-body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+
+/* Refined shadows */
+.shadow-editorial {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-editorial-hover {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Dark mode shadows */
+.dark .shadow-editorial {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .shadow-editorial-hover {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Elegant card styles */
+.card-editorial {
+  @apply rounded-xl transition-all duration-300 ease-out;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,1) 100%);
+}
+
+.dark .card-editorial {
+  background: linear-gradient(135deg, rgba(26,26,26,0.9) 0%, rgba(26,26,26,1) 100%);
+}
+
+.card-editorial:hover {
+  transform: translateY(-2px);
+}
+
+/* Accent underline animation */
+.accent-underline {
+  position: relative;
+}
+
+.accent-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  transition: width 0.3s ease;
+}
+
+.accent-underline:hover::after {
+  width: 100%;
+}
+
+/* Badge styles */
+.badge-editorial {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium tracking-wide;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  color: var(--color-primary);
+}
+
+.dark .badge-editorial {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+  color: #a5b4fc;
+}
+
+/* Smooth scrolling */
 @layer base {
   html {
     scroll-behavior: smooth;
   }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
   
-  /* Improve touch targets on mobile */
-  @media (max-width: 640px) {
-    button {
-      min-height: 44px;
-      min-width: 44px;
-    }
-    
-    a {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-    }
+  a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
 @layer utilities {
-  /* Custom line clamp utilities for better mobile text truncation */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -36,15 +169,8 @@ body {
     overflow: hidden;
   }
   
-  /* Better mobile scrolling */
   .mobile-scroll {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
-  
-  /* Improved mobile typography */
-  .mobile-readable {
-    line-height: 1.6;
-    letter-spacing: 0.01em;
-  }
-} 
+}
