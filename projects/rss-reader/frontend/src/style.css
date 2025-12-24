@@ -2,49 +2,197 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+/* Dark Luxe Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --luxe-bg: #09090b;
+  --luxe-card: #18181b;
+  --luxe-card-hover: #27272a;
+  --luxe-border: rgba(255, 255, 255, 0.08);
+  --luxe-accent: #8b5cf6;
+  --luxe-accent-glow: rgba(139, 92, 246, 0.4);
+  --luxe-text: #fafafa;
+  --luxe-text-muted: #a1a1aa;
 }
 
-/* Mobile optimizations */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--luxe-bg);
+}
+
+/* Glass morphism effects */
+.glass {
+  background: rgba(24, 24, 27, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--luxe-border);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glow effects */
+.glow-accent {
+  box-shadow: 0 0 20px var(--luxe-accent-glow);
+}
+
+.glow-accent-sm {
+  box-shadow: 0 0 10px var(--luxe-accent-glow);
+}
+
+/* Gradient backgrounds */
+.gradient-luxe {
+  background: linear-gradient(135deg, #18181b 0%, #09090b 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #8b5cf6 100%);
+}
+
+.gradient-accent-text {
+  background: linear-gradient(135deg, #a78bfa 0%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card styles */
+.card-luxe {
+  background: var(--luxe-card);
+  border: 1px solid var(--luxe-border);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-luxe:hover {
+  background: var(--luxe-card-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Button styles */
+.btn-luxe {
+  @apply px-4 py-2 rounded-xl font-medium transition-all duration-300;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.btn-luxe:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+}
+
+.btn-luxe-ghost {
+  @apply px-4 py-2 rounded-xl font-medium transition-all duration-300;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--luxe-text-muted);
+  border: 1px solid var(--luxe-border);
+}
+
+.btn-luxe-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--luxe-text);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Subtle shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+/* Custom scrollbar - Dark Luxe Style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--luxe-accent);
+  outline-offset: 2px;
+}
+
+/* Badge styles */
+.badge-luxe {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Divider */
+.divider-luxe {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+}
+
+/* Smooth scrolling */
 @layer base {
   html {
     scroll-behavior: smooth;
   }
-  
-  /* Improve touch targets on mobile */
-  @media (max-width: 640px) {
-    button {
-      min-height: 44px;
-      min-width: 44px;
-    }
-    
-    a {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
 @layer utilities {
-  /* Custom line clamp utilities for better mobile text truncation */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
-  /* Better mobile scrolling */
-  .mobile-scroll {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-  
-  /* Improved mobile typography */
-  .mobile-readable {
-    line-height: 1.6;
-    letter-spacing: 0.01em;
-  }
-} 
+}
