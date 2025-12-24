@@ -1,17 +1,17 @@
 <template>
-  <div class="px-4 sm:px-6 lg:px-8">
+  <div>
     <!-- Header -->
-    <div class="sm:flex sm:items-center">
+    <div class="sm:flex sm:items-center mb-8">
       <div class="sm:flex-auto">
-        <h1 class="text-2xl font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">RSS Feeds</h1>
-        <p class="mt-2 text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-300' : 'text-gray-700'">
-          Manage your RSS feed subscriptions
+        <h1 class="text-2xl font-semibold" :class="darkMode ? 'text-white' : 'text-gray-900'">Feeds</h1>
+        <p class="mt-1 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
+          Manage your RSS subscriptions
         </p>
       </div>
-      <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+      <div class="mt-4 sm:mt-0">
         <button
           @click="showAddModal = true"
-          class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
         >
           Add Feed
         </button>
@@ -19,83 +19,81 @@
     </div>
 
     <!-- Feed Search Section -->
-    <div class="mt-8 bg-white shadow sm:rounded-lg">
-      <div class="px-4 py-5 sm:p-6">
-        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Search for RSS Feeds</h3>
-        <div class="flex gap-3">
-          <div class="flex-1">
-            <input
-              v-model="searchQuery"
-              @keyup.enter="searchFeeds"
-              type="text"
-              placeholder="Search for a website, magazine, or RSS feed..."
-              class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <button
-            @click="searchFeeds"
-            :disabled="searching"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {{ searching ? 'Searching...' : 'Search' }}
-          </button>
-        </div>
+    <div class="rounded-xl border p-6 mb-8" :class="darkMode ? 'bg-[#1a1a1a] border-[#262626]' : 'bg-white border-gray-200'">
+      <h3 class="text-sm font-medium mb-4" :class="darkMode ? 'text-white' : 'text-gray-900'">Search for RSS Feeds</h3>
+      <div class="flex gap-3">
+        <input
+          v-model="searchQuery"
+          @keyup.enter="searchFeeds"
+          type="text"
+          placeholder="Search for a website, magazine, or RSS feed..."
+          class="flex-1 px-4 py-2 text-sm rounded-lg border transition-colors"
+          :class="darkMode 
+            ? 'bg-[#111111] border-[#262626] text-white placeholder-gray-500 focus:border-blue-500' 
+            : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-500'"
+        />
+        <button
+          @click="searchFeeds"
+          :disabled="searching"
+          class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        >
+          {{ searching ? 'Searching...' : 'Search' }}
+        </button>
+      </div>
 
-        <!-- Search Results -->
-        <div v-if="searchResults.length > 0" class="mt-6">
-          <h4 class="text-sm font-medium text-gray-900 mb-3">Search Results</h4>
-          <div class="space-y-3">
-            <div
-              v-for="feed in searchResults"
-              :key="feed.url"
-              class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              <div class="flex items-center space-x-3">
-                <img
-                  v-if="feed.favicon"
-                  :src="feed.favicon"
-                  :alt="feed.title"
-                  class="w-6 h-6 rounded"
-                  @error="$event.target.style.display='none'"
-                />
-                <div>
-                  <h5 class="text-sm font-medium text-gray-900">{{ feed.title }}</h5>
-                  <p v-if="feed.website" class="text-xs text-gray-500">{{ feed.website }}</p>
-                  <p v-if="feed.description" class="text-xs text-gray-600 mt-1">{{ feed.description }}</p>
-                </div>
-              </div>
-              <button
-                @click="addFeedFromSearch(feed)"
-                :disabled="addingFeed === feed.url"
-                class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                {{ addingFeed === feed.url ? 'Adding...' : 'Add' }}
-              </button>
+      <!-- Search Results -->
+      <div v-if="searchResults.length > 0" class="mt-6 space-y-2">
+        <h4 class="text-xs font-medium uppercase tracking-wide mb-3" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Results</h4>
+        <div
+          v-for="feed in searchResults"
+          :key="feed.url"
+          class="flex items-center justify-between p-4 rounded-lg border transition-colors"
+          :class="darkMode ? 'border-[#262626] hover:bg-[#222]' : 'border-gray-100 hover:bg-gray-50'"
+        >
+          <div class="flex items-center space-x-3">
+            <img
+              v-if="feed.favicon"
+              :src="feed.favicon"
+              :alt="feed.title"
+              class="w-6 h-6 rounded"
+              @error="$event.target.style.display='none'"
+            />
+            <div>
+              <h5 class="text-sm font-medium" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ feed.title }}</h5>
+              <p v-if="feed.website" class="text-xs" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">{{ feed.website }}</p>
             </div>
           </div>
+          <button
+            @click="addFeedFromSearch(feed)"
+            :disabled="addingFeed === feed.url"
+            class="px-3 py-1 text-xs font-medium rounded-md transition-colors disabled:opacity-50"
+            :class="darkMode ? 'text-blue-400 bg-blue-500/10 hover:bg-blue-500/20' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'"
+          >
+            {{ addingFeed === feed.url ? 'Adding...' : 'Add' }}
+          </button>
         </div>
+      </div>
 
-        <!-- No Results -->
-        <div v-else-if="searched && searchResults.length === 0" class="mt-6 text-center py-4">
-          <p class="text-sm text-gray-500">No RSS feeds found for "{{ searchQuery }}"</p>
-        </div>
+      <!-- No Results -->
+      <div v-else-if="searched && searchResults.length === 0" class="mt-6 text-center py-4">
+        <p class="text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">No RSS feeds found for "{{ searchQuery }}"</p>
       </div>
     </div>
 
     <!-- Feeds list -->
-    <div class="mt-8">
+    <div>
       <div v-if="loading" class="text-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-        <p class="mt-4 text-gray-500">Loading feeds...</p>
+        <div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent mx-auto"></div>
+        <p class="mt-4 text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Loading feeds...</p>
       </div>
 
       <div v-else-if="loadError" class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        <svg class="mx-auto h-10 w-10" :class="darkMode ? 'text-red-400' : 'text-red-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
         </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">Error loading feeds</h3>
-        <p class="mt-1 text-sm text-gray-500">There was a problem loading your feeds. Please try again.</p>
-        <div class="mt-6">
+        <h3 class="mt-3 text-sm font-medium" :class="darkMode ? 'text-white' : 'text-gray-900'">Error loading feeds</h3>
+        <p class="mt-1 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">There was a problem loading your feeds.</p>
+        <div class="mt-4">
           <button
             @click="retryLoadFeeds"
             class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -106,75 +104,66 @@
       </div>
 
       <div v-else-if="feeds.length === 0" class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+        <svg class="mx-auto h-10 w-10" :class="darkMode ? 'text-gray-600' : 'text-gray-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
         </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No feeds</h3>
-        <p class="mt-1 text-sm text-gray-500">Get started by adding your first RSS feed.</p>
-        <div class="mt-6">
+        <h3 class="mt-3 text-sm font-medium" :class="darkMode ? 'text-white' : 'text-gray-900'">No feeds yet</h3>
+        <p class="mt-1 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Get started by adding your first RSS feed.</p>
+        <div class="mt-4">
           <button
             @click="showAddModal = true"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
           >
             Add Feed
           </button>
         </div>
       </div>
 
-      <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul class="divide-y divide-gray-200">
-          <li v-for="feed in feeds" :key="feed.id">
-            <div class="px-4 py-4 sm:px-6">
-              <div class="flex items-center justify-between">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between">
-                    <p class="text-sm font-medium text-indigo-600 truncate">
-                      {{ feed.name }}
-                    </p>
-                    <div class="ml-2 flex-shrink-0 flex">
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {{ feed.category }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="mt-2 flex">
-                    <div class="flex items-center text-sm text-gray-500">
-                      <span class="truncate">{{ feed.url }}</span>
-                      <span class="mx-1">•</span>
-                      <span>{{ feed.article_count }} articles</span>
-                      <span v-if="feed.last_fetched" class="mx-1">•</span>
-                      <span v-if="feed.last_fetched" class="truncate">
-                        Last updated: {{ formatDate(feed.last_fetched) }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="ml-4 flex-shrink-0">
-                  <button
-                    @click="deleteFeed(feed)"
-                    class="text-red-600 hover:text-red-900 text-sm font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+      <div v-else class="space-y-2">
+        <div v-for="feed in feeds" :key="feed.id" 
+             class="flex items-center justify-between p-4 rounded-xl border transition-colors"
+             :class="darkMode ? 'bg-[#1a1a1a] border-[#262626] hover:bg-[#222]' : 'bg-white border-gray-200 hover:border-gray-300'">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3">
+              <h3 class="text-sm font-medium truncate" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                {{ feed.name }}
+              </h3>
+              <span class="px-2 py-0.5 text-xs font-medium rounded-md"
+                    :class="darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'">
+                {{ feed.category }}
+              </span>
             </div>
-          </li>
-        </ul>
+            <div class="mt-1.5 flex items-center gap-2 text-xs" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">
+              <span class="truncate max-w-xs">{{ feed.url }}</span>
+              <span>•</span>
+              <span>{{ feed.article_count }} articles</span>
+              <span v-if="feed.last_fetched">•</span>
+              <span v-if="feed.last_fetched">{{ formatDate(feed.last_fetched) }}</span>
+            </div>
+          </div>
+          <button
+            @click="deleteFeed(feed)"
+            class="ml-4 px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+            :class="darkMode ? 'text-red-400 hover:bg-red-500/10' : 'text-red-600 hover:bg-red-50'"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Add Feed Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg max-w-md w-full p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium text-gray-900">Add RSS Feed</h3>
+    <div v-if="showAddModal" class="fixed inset-0 flex items-center justify-center p-4 z-50" :class="darkMode ? 'bg-black/80' : 'bg-black/50'">
+      <div class="rounded-xl max-w-md w-full p-6" :class="darkMode ? 'bg-[#1a1a1a] border border-[#262626]' : 'bg-white'">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold" :class="darkMode ? 'text-white' : 'text-gray-900'">Add RSS Feed</h3>
           <button
             @click="showAddModal = false"
-            class="text-gray-400 hover:text-gray-600"
+            class="p-1 rounded-md transition-colors"
+            :class="darkMode ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'"
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
