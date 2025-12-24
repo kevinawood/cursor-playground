@@ -2,49 +2,165 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+/* Minimal Clean Design System - Apple/Linear Inspired */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --minimal-bg: #ffffff;
+  --minimal-bg-secondary: #f9fafb;
+  --minimal-border: #e5e7eb;
+  --minimal-text: #111827;
+  --minimal-text-secondary: #6b7280;
+  --minimal-accent: #2563eb;
+  --minimal-accent-light: #eff6ff;
 }
 
-/* Mobile optimizations */
+.dark {
+  --minimal-bg: #111111;
+  --minimal-bg-secondary: #1a1a1a;
+  --minimal-border: #262626;
+  --minimal-text: #f9fafb;
+  --minimal-text-secondary: #9ca3af;
+  --minimal-accent: #3b82f6;
+  --minimal-accent-light: rgba(59, 130, 246, 0.1);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Ultra-clean transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Minimal card */
+.card-minimal {
+  background: var(--minimal-bg);
+  border: 1px solid var(--minimal-border);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.card-minimal:hover {
+  border-color: var(--minimal-accent);
+}
+
+/* Subtle focus ring */
+.focus-minimal:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--minimal-bg), 0 0 0 4px var(--minimal-accent);
+}
+
+/* Clean buttons */
+.btn-minimal {
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+  background: var(--minimal-text);
+  color: var(--minimal-bg);
+}
+
+.btn-minimal:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-minimal-ghost {
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+  color: var(--minimal-text-secondary);
+  background: transparent;
+}
+
+.btn-minimal-ghost:hover {
+  background: var(--minimal-bg-secondary);
+  color: var(--minimal-text);
+}
+
+/* Minimal badge */
+.badge-minimal {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium;
+  background: var(--minimal-accent-light);
+  color: var(--minimal-accent);
+}
+
+/* Clean dividers */
+.divider-minimal {
+  height: 1px;
+  background: var(--minimal-border);
+}
+
+/* Subtle hover effect */
+.hover-lift {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Hidden scrollbar but still scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling */
 @layer base {
   html {
     scroll-behavior: smooth;
   }
-  
-  /* Improve touch targets on mobile */
-  @media (max-width: 640px) {
-    button {
-      min-height: 44px;
-      min-width: 44px;
-    }
-    
-    a {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-    }
+}
+
+/* Custom scrollbar - Minimal style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--minimal-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--minimal-text-secondary);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
 @layer utilities {
-  /* Custom line clamp utilities for better mobile text truncation */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
-  /* Better mobile scrolling */
-  .mobile-scroll {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-  
-  /* Improved mobile typography */
-  .mobile-readable {
-    line-height: 1.6;
-    letter-spacing: 0.01em;
-  }
-} 
+}

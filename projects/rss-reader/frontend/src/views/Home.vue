@@ -1,24 +1,24 @@
 <template>
-  <div class="flex min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-gray-900' : 'bg-gray-50'">
-    <!-- Sidebar - Made narrower and more to the left -->
+  <div class="flex min-h-screen transition-colors duration-200" :class="darkMode ? 'bg-[#111111]' : 'bg-white'">
+    <!-- Sidebar - Minimal Clean Style -->
     <div 
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-56 shadow-lg transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col',
-        darkMode ? 'bg-gray-800' : 'bg-white',
+        'fixed inset-y-0 left-0 z-50 w-60 transform transition-all duration-200 lg:relative lg:translate-x-0 flex flex-col border-r',
+        darkMode ? 'bg-[#111111] border-[#262626]' : 'bg-white border-gray-200',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
       style="top: 3.5rem; height: calc(100vh - 3.5rem);"
     >
       <!-- Sidebar Header -->
-      <div class="flex items-center justify-between h-12 sm:h-16 px-3 transition-colors duration-200 border-b" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
-        <h2 class="text-sm sm:text-base font-semibold transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">Subscribed Feeds</h2>
+      <div class="flex items-center justify-between h-12 px-4 border-b" :class="darkMode ? 'border-[#262626]' : 'border-gray-100'">
+        <h2 class="text-xs font-medium uppercase tracking-wide" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Feeds</h2>
         <button
           @click="sidebarOpen = false"
-          class="lg:hidden p-1.5 sm:p-2 rounded-md transition-colors duration-200"
-          :class="darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'"
+          class="lg:hidden p-1.5 rounded transition-colors"
+          :class="darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'"
         >
-          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
@@ -188,66 +188,21 @@
       <!-- Content Area - Made wider -->
       <div class="flex-1 overflow-y-auto">
         <div class="px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
-        <!-- Stats Cards - Hidden on mobile to save space -->
-        <div class="hidden sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <div class="p-4 lg:p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Total Articles</dt>
-                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.total_articles }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+        <!-- Stats Cards - Minimal Clean Style -->
+        <div class="hidden sm:flex items-center gap-8 mb-8 pb-6 border-b" :class="darkMode ? 'border-[#262626]' : 'border-gray-100'">
+          <div class="flex items-center gap-3">
+            <div class="text-2xl font-semibold tabular-nums" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.total_articles.toLocaleString() }}</div>
+            <div class="text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">articles</div>
           </div>
-
-          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <div class="p-4 lg:p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Unread</dt>
-                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.unread_articles }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+          <div class="w-px h-6" :class="darkMode ? 'bg-[#262626]' : 'bg-gray-200'"></div>
+          <div class="flex items-center gap-3">
+            <div class="text-2xl font-semibold tabular-nums text-blue-600">{{ stats.unread_articles.toLocaleString() }}</div>
+            <div class="text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">unread</div>
           </div>
-
-          <div class="transition-colors duration-200 overflow-hidden shadow rounded-lg" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <div class="p-4 lg:p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium transition-colors duration-200 truncate" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">Read</dt>
-                    <dd class="text-lg font-medium transition-colors duration-200" :class="darkMode ? 'text-white' : 'text-gray-900'">{{ stats.read_articles }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+          <div class="w-px h-6" :class="darkMode ? 'bg-[#262626]' : 'bg-gray-200'"></div>
+          <div class="flex items-center gap-3">
+            <div class="text-2xl font-semibold tabular-nums" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">{{ stats.read_articles.toLocaleString() }}</div>
+            <div class="text-sm" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">read</div>
           </div>
         </div>
 
@@ -274,121 +229,84 @@
             </div>
           </div>
 
-          <div v-else class="transition-colors duration-200 shadow overflow-hidden sm:rounded-md" :class="darkMode ? 'bg-gray-800' : 'bg-white'">
-            <ul class="transition-colors duration-200" :class="darkMode ? 'divide-gray-700' : 'divide-gray-200'">
-              <li v-for="article in articles" :key="article.id">
-                <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-                  <div class="space-y-3">
-                    <!-- Title and Action Buttons -->
-                    <div class="flex items-start justify-between">
-                      <div class="flex-1 min-w-0 pr-3">
-                        <h3 class="text-sm sm:text-base font-medium transition-colors duration-200 leading-5 sm:leading-6" :class="darkMode ? 'text-white' : 'text-gray-900'">
-                          <a 
-                            :href="article.link" 
-                            target="_blank" 
-                            class="hover:underline transition-colors duration-200 cursor-pointer"
-                            :class="darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'"
-                            @click="openArticle(article, $event)"
-                          >
-                            {{ article.title }}
-                          </a>
-                        </h3>
-                      </div>
-                      <div class="flex-shrink-0 flex items-center space-x-1">
-                        <!-- Summarize Button -->
-                        <button
-                          @click="summarizeArticle(article)"
-                          :disabled="article.summarizing"
-                          class="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50"
-                          :title="article.summary ? 'View Summary' : 'Generate Summary'"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                          </svg>
-                        </button>
-                        
-                        <!-- Bookmark Button -->
-                        <button
-                          @click="toggleBookmark(article)"
-                          :class="[
-                            'p-1.5 rounded-md transition-colors',
-                            article.is_bookmarked
-                              ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50'
-                              : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50'
-                          ]"
-                          :title="article.is_bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'"
-                        >
-                          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                          </svg>
-                        </button>
-                        
-                        <!-- Read Status Button -->
-                        <button
-                          @click="toggleReadStatus(article)"
-                          :class="[
-                            'px-2 py-1 text-xs font-medium rounded-full border',
-                            article.is_read
-                              ? 'bg-gray-50 text-gray-700 border-gray-200'
-                              : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                          ]"
-                        >
-                          {{ article.is_read ? 'Read' : 'Unread' }}
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div v-if="article.description" class="text-sm leading-5 line-clamp-3 sm:line-clamp-2 transition-colors duration-200" :class="darkMode ? 'text-gray-300' : 'text-gray-600'">
-                      {{ stripHtml(article.description) }}
-                    </div>
-
-                    <!-- AI Summary -->
-                    <div v-if="article.summary" class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
-                      <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                          </svg>
-                        </div>
-                        <div class="ml-3">
-                          <h4 class="text-sm font-medium text-blue-800 mb-1">AI Summary</h4>
-                          <p class="text-sm text-blue-700">{{ article.summary }}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Meta information - Added reading time -->
-                    <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm transition-colors duration-200" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
-                      <div class="flex items-center">
-                        <img 
-                          v-if="article.feed_logo_url" 
-                          :src="article.feed_logo_url" 
-                          :alt="article.feed_name"
-                          class="w-4 h-4 mr-1.5 rounded-sm flex-shrink-0"
-                          @error="handleImageError"
-                        />
-                        <span v-else class="mr-1.5 flex-shrink-0">{{ getFeedIcon(article.feed_name) }}</span>
-                        <span class="font-medium">{{ article.feed_name }}</span>
-                      </div>
-                      <span class="text-gray-400">•</span>
-                      <span>{{ formatTimeAgo(article.published_date) }}</span>
-                      <span class="text-gray-400">•</span>
-                      <!-- Reading Time Badge -->
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-200" 
-                            :class="getReadingTimeColor(article)">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        {{ calculateReadingTime(article) }}
-                      </span>
-                      <span v-if="article.author" class="text-gray-400">•</span>
-                      <span v-if="article.author" class="truncate">{{ article.author }}</span>
-                    </div>
+          <div v-else class="divide-y" :class="darkMode ? 'divide-[#262626]' : 'divide-gray-100'">
+            <article v-for="article in articles" :key="article.id" class="py-5 first:pt-0">
+              <div class="space-y-3">
+                <!-- Title and Action Buttons -->
+                <div class="flex items-start justify-between gap-4">
+                  <h3 class="flex-1 text-base font-medium leading-snug" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                    <a 
+                      :href="article.link" 
+                      target="_blank" 
+                      class="hover:text-blue-600 transition-colors cursor-pointer"
+                      @click="openArticle(article, $event)"
+                    >
+                      {{ article.title }}
+                    </a>
+                  </h3>
+                  <div class="flex-shrink-0 flex items-center space-x-1">
+                    <button
+                      @click="summarizeArticle(article)"
+                      :disabled="article.summarizing"
+                      class="p-1.5 rounded-md transition-colors"
+                      :class="darkMode ? 'text-gray-500 hover:text-blue-400 hover:bg-blue-500/10' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'"
+                      :title="article.summary ? 'View Summary' : 'Generate Summary'"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      @click="toggleBookmark(article)"
+                      class="p-1.5 rounded-md transition-colors"
+                      :class="article.is_bookmarked
+                        ? 'text-yellow-500 hover:text-yellow-600'
+                        : darkMode ? 'text-gray-500 hover:text-yellow-400' : 'text-gray-400 hover:text-yellow-500'"
+                      :title="article.is_bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'"
+                    >
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                      </svg>
+                    </button>
+                    <button
+                      @click="toggleReadStatus(article)"
+                      class="px-2 py-1 text-xs font-medium rounded-md transition-colors"
+                      :class="article.is_read
+                        ? darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'
+                        : 'bg-blue-100 text-blue-700'"
+                    >
+                      {{ article.is_read ? 'Read' : 'Unread' }}
+                    </button>
                   </div>
                 </div>
-              </li>
-            </ul>
+
+                <!-- Description -->
+                <p v-if="article.description" class="text-sm leading-relaxed line-clamp-2" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
+                  {{ stripHtml(article.description) }}
+                </p>
+
+                <!-- AI Summary -->
+                <div v-if="article.summary" class="p-3 rounded-lg" :class="darkMode ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50'">
+                  <p class="text-sm" :class="darkMode ? 'text-blue-300' : 'text-blue-700'">{{ article.summary }}</p>
+                </div>
+
+                <!-- Meta information -->
+                <div class="flex flex-wrap items-center gap-2 text-xs" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">
+                  <span class="font-medium" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">{{ article.feed_name }}</span>
+                  <span>•</span>
+                  <span>{{ formatTimeAgo(article.published_date) }}</span>
+                  <span>•</span>
+                  <span class="inline-flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    {{ calculateReadingTime(article) }}
+                  </span>
+                  <span v-if="article.author">•</span>
+                  <span v-if="article.author">{{ article.author }}</span>
+                </div>
+              </div>
+            </article>
           </div>
 
           <!-- Pagination -->
