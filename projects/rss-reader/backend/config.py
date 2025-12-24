@@ -19,4 +19,4 @@ class Config:
     
     # Flask settings
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true' 
+    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
