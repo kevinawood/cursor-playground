@@ -291,7 +291,7 @@
 
                 <!-- Meta information -->
                 <div class="flex flex-wrap items-center gap-2 text-xs" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">
-                  <span class="font-medium" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">{{ article.feed_name }}</span>
+                  <span class="font-semibold" :style="{ color: getFeedColor(article.feed_name) }">{{ article.feed_name }}</span>
                   <span>•</span>
                   <span>{{ formatTimeAgo(article.published_date) }}</span>
                   <span>•</span>
@@ -615,7 +615,63 @@ export default {
       }
       return iconMap[feedName] || '📄'
     },
-    
+
+    getFeedColor(feedName) {
+      // Brand colors for known feeds
+      const colorMap = {
+        'Kotaku': '#ff6600',
+        'Hacker News': '#ff6600',
+        'The Verge': '#e5127d',
+        'Ars Technica': '#ff4e00',
+        'TechCrunch': '#0a9e01',
+        'WIRED': '#000000',
+        'Engadget': '#00bfff',
+        'Gizmodo': '#76b900',
+        'VentureBeat': '#ce0000',
+        'Mashable': '#00aeef',
+        'Slate Magazine': '#c73f2d',
+        'Bloomberg': '#2800d7',
+        'Bloomberg.com': '#2800d7',
+        'WSJ.com: World News': '#0274b6',
+        'GamesRadar+': '#e60012',
+        'Latest from GamesRadar+': '#e60012',
+        'Eurogamer.net': '#2d9ee0',
+        'Decrypt': '#00d395',
+        'Null Byte': '#76ff03',
+        'Crypto Valley Journal': '#f7931a',
+        'It\'s FOSS': '#23a5d5',
+        'HBR.org': '#cc0000',
+        'Gear Latest': '#4285f4',
+        'Tech – Ars Technica': '#ff4e00'
+      }
+      
+      // Check for exact match first
+      if (colorMap[feedName]) {
+        return colorMap[feedName]
+      }
+      
+      // Check for partial matches
+      for (const [key, color] of Object.entries(colorMap)) {
+        if (feedName.toLowerCase().includes(key.toLowerCase()) || 
+            key.toLowerCase().includes(feedName.toLowerCase())) {
+          return color
+        }
+      }
+      
+      // Generate consistent color from feed name hash
+      let hash = 0
+      for (let i = 0; i < feedName.length; i++) {
+        hash = feedName.charCodeAt(i) + ((hash << 5) - hash)
+      }
+      
+      // Generate a vibrant color (avoid grays)
+      const hue = Math.abs(hash) % 360
+      const saturation = 65 + (Math.abs(hash >> 8) % 20) // 65-85%
+      const lightness = 50 + (Math.abs(hash >> 16) % 15) // 50-65%
+      
+      return `hsl(${hue}, ${saturation}%, ${lightness}%)`
+    },
+
     handleImageError(event) {
       // Hide the image if it fails to load
       event.target.style.display = 'none'
