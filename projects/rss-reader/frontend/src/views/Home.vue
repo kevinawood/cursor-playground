@@ -99,8 +99,8 @@
       style="top: 3.5rem;"
     ></div>
 
-    <!-- Main Content - Made wider to use more screen real estate -->
-    <div class="flex-1 flex flex-col overflow-hidden" style="min-width: 60em;">
+    <!-- Main Content - Made wider to use more screen real estate on desktop -->
+    <div class="flex-1 flex flex-col overflow-hidden lg:min-w-[60em]">
       <!-- Top Bar -->
       <div class="transition-colors duration-200 px-3 sm:px-4 lg:px-6 border-b" :class="darkMode ? 'bg-[#111111] border-[#262626]' : 'bg-white border-gray-200'">
         <div class="flex items-center justify-between h-12 sm:h-16">
