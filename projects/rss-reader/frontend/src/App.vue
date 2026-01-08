@@ -6,13 +6,17 @@
       <div class="max-w-5xl mx-auto px-6">
         <div class="flex justify-between h-14">
           <div class="flex items-center">
-            <router-link to="/" class="flex items-center space-x-3">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
-                </svg>
+            <router-link to="/" class="flex items-center space-x-2.5 group">
+              <!-- Modern geometric logo -->
+              <div class="relative w-8 h-8">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg transform group-hover:scale-105 transition-transform"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-white font-bold text-sm">r3</span>
+                </div>
               </div>
-              <span class="text-base font-semibold" :class="darkMode ? 'text-white' : 'text-gray-900'">Reader</span>
+              <span class="text-lg font-bold tracking-tight" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                r33der<span class="text-blue-500">.dev</span>
+              </span>
             </router-link>
           </div>
           
