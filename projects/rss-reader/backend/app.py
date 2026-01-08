@@ -20,6 +20,8 @@ app = Flask(__name__)
 allowed_origins = [
     'http://localhost:3000',  # Local development
     'http://localhost:5173',  # Vite dev server
+    'https://r33der.dev',     # Custom domain
+    'https://www.r33der.dev', # Custom domain with www
     'https://rss-reader-lake-omega.vercel.app',  # Your Vercel frontend
     'https://rss-reader-frontend.vercel.app',    # Alternative Vercel domain
     'https://*.vercel.app',   # Any Vercel subdomain
