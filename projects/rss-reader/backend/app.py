@@ -205,6 +205,77 @@ def get_feeds():
         'article_count': Article.query.filter_by(feed_id=feed.id).count()
     } for feed in feeds])
 
+def discover_feed_url(url):
+    """
+    Attempt to discover RSS/Atom feed URL from a webpage.
+    If the URL is already a valid feed, returns it unchanged.
+    If it's an HTML page, looks for <link rel="alternate"> tags pointing to feeds.
+    
+    Returns: (feed_url, discovered) tuple where discovered is True if URL was auto-discovered
+    """
+    try:
+        # First, try to parse as RSS directly
+        parsed = feedparser.parse(url)
+        if parsed.entries and len(parsed.entries) > 0:
+            # It's already a valid feed
+            return url, False
+        
+        # If no entries, it might be HTML - try to fetch and parse
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; r33der/1.0; +https://r33der.dev)'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        content_type = response.headers.get('Content-Type', '').lower()
+        
+        # Check if it's HTML
+        if 'text/html' in content_type or 'application/xhtml' in content_type:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Look for RSS/Atom feed links in <head>
+            feed_links = soup.find_all('link', rel='alternate')
+            
+            for link in feed_links:
+                link_type = link.get('type', '').lower()
+                href = link.get('href', '')
+                
+                if href and ('rss' in link_type or 'atom' in link_type or 'xml' in link_type):
+                    # Handle relative URLs
+                    if href.startswith('/'):
+                        from urllib.parse import urljoin
+                        href = urljoin(url, href)
+                    elif not href.startswith('http'):
+                        from urllib.parse import urljoin
+                        href = urljoin(url, href)
+                    
+                    print(f"🔍 Auto-discovered feed URL: {href}")
+                    return href, True
+            
+            # Common feed URL patterns to try as fallback
+            from urllib.parse import urljoin, urlparse
+            base_url = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
+            common_paths = [
+                '/feed', '/feed.xml', '/rss', '/rss.xml', '/atom.xml',
+                '/feeds/posts/default', '/feed/atom'
+            ]
+            
+            for path in common_paths:
+                test_url = urljoin(base_url, path)
+                try:
+                    test_parsed = feedparser.parse(test_url)
+                    if test_parsed.entries and len(test_parsed.entries) > 0:
+                        print(f"🔍 Found feed at common path: {test_url}")
+                        return test_url, True
+                except:
+                    continue
+        
+        # Return original URL if no feed discovered
+        return url, False
+        
+    except Exception as e:
+        print(f"⚠️ Feed discovery error: {e}")
+        return url, False
+
+
 @app.route('/api/feeds', methods=['POST'])
 def add_feed():
     data = request.json
@@ -220,6 +291,12 @@ def add_feed():
         name = name[:97] + "..."
         print(f"📝 Truncated feed name to: {name}")
     
+    # Try to auto-discover feed URL if the provided URL is an HTML page
+    discovered_url, was_discovered = discover_feed_url(url)
+    if was_discovered:
+        print(f"🔗 Using discovered feed URL: {discovered_url} (original: {url})")
+        url = discovered_url
+    
     # Check if feed already exists
     existing = Feed.query.filter_by(url=url).first()
     if existing:
@@ -229,7 +306,7 @@ def add_feed():
     try:
         parsed = feedparser.parse(url)
         if not parsed.entries:
-            return jsonify({'error': 'Invalid RSS feed or no entries found'}), 400
+            return jsonify({'error': 'Invalid RSS feed or no entries found. Could not auto-discover feed URL.'}), 400
     except:
         return jsonify({'error': 'Could not parse RSS feed'}), 400
     
