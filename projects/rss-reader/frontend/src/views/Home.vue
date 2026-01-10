@@ -26,6 +26,32 @@
       <!-- Sidebar Content - Scrollable area -->
       <div class="flex-1 overflow-y-auto min-h-0">
         <div class="p-2 sm:p-3">
+          <!-- Feed Search Box -->
+          <div class="relative mb-3">
+            <input
+              v-model="feedSearchQuery"
+              type="text"
+              placeholder="Filter feeds..."
+              class="w-full px-3 py-1.5 pl-8 text-sm rounded-md border transition-colors focus:outline-none focus:ring-1"
+              :class="darkMode 
+                ? 'bg-[#1a1a1a] border-[#333] text-gray-200 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500' 
+                : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500'"
+            />
+            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" :class="darkMode ? 'text-gray-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <button 
+              v-if="feedSearchQuery"
+              @click="feedSearchQuery = ''"
+              class="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded transition-colors"
+              :class="darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
           <!-- All Feeds Option -->
           <button
             @click="selectFeed(null)"
@@ -62,8 +88,12 @@
           </div>
 
           <div v-else class="space-y-1">
+            <!-- No results message -->
+            <p v-if="filteredFeeds.length === 0 && feedSearchQuery" class="text-xs text-center py-2" :class="darkMode ? 'text-gray-500' : 'text-gray-400'">
+              No feeds match "{{ feedSearchQuery }}"
+            </p>
             <button
-              v-for="feed in feeds"
+              v-for="feed in filteredFeeds"
               :key="feed.id"
               @click="selectFeed(feed.id)"
               :class="[
@@ -404,6 +434,7 @@ export default {
       selectedFeedId: null,
       sidebarOpen: false,
       refreshing: false,
+      feedSearchQuery: '',
       // HN Discussion Modal
       showHNModal: false,
       hnModalContent: {
@@ -417,6 +448,17 @@ export default {
       readingTimeCache: new Map(),
       // AI Summary cache
       summaryCache: new Map()
+    }
+  },
+  computed: {
+    filteredFeeds() {
+      if (!this.feedSearchQuery.trim()) {
+        return this.feeds
+      }
+      const query = this.feedSearchQuery.toLowerCase().trim()
+      return this.feeds.filter(feed => 
+        feed.name.toLowerCase().includes(query)
+      )
     }
   },
   async mounted() {
